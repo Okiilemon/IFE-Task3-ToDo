@@ -1,16 +1,11 @@
 var category = (function(){
 
   //----------   Begin Module Scope Variables  ------------
-  var height_per_item = 29;
-  var folder_tmpl = 
-  '<div class="folder-name-box" data-folder-selected="false">'
-  + '<i class="fa fa-folder"></i>'
-  + '<i class="fa fa-folder-open-o"></i>'
-  + '<span class="folder-name"></span>'
-  + '(<span class="task-num">0</span>)'
-  + '</div>'
-  + '<ul class="task-items" data-is-opened="false"></ul>'
 
+  //每个item或者task的高度
+  var height_per_item = 29;
+  //当前被选中的分类文件夹
+  var selected_folder; 
         
   //----------   End Module Scope Variables  --------------
 
@@ -39,7 +34,12 @@ var category = (function(){
 
       }
     };
-
+    
+    /*
+     * 动态地去增加或减少列表树中自身以及父节点的高度，
+     * 否则新增加的节点不能立即动态地显示在页面中，
+     * 会由于父节点的overflow:hidden而遮盖掉
+    */
     var changeHeightOfItemsBox = function(changeType,newFolder){
       var item_boxes = document.querySelectorAll('.task-items');
       var lenOfFolders = item_boxes.length;
@@ -58,12 +58,105 @@ var category = (function(){
       }
     };
 
+    /*
+     * 渲染单个分类列表节点方法
+     * 参数说明：
+     * name:新写入的这个分类列表的名字
+     * parentFolderID: 上一级分类文件夹的唯一标示符（文件夹的名字）
+     * num: 这个分类列表下任务的个数
+     * level: 这个分类列表在嵌套列表树中所处的层级     
+     * 
+    */
+    var paintFolderNode = function(name, parentFolder, num, level){
+
+      //创建待添加的新分类节点
+      var toBeAddedFolder = document.createElement('li');
+      toBeAddedFolder.setAttribute('data-has-child','false');
+      toBeAddedFolder.className = 'task-folder';
+      folder_tmpl = 
+        '<div class="folder-name-box" data-folder-selected="false" data-tree-level=' + level + '>'
+      + '<i class="fa fa-folder"></i>'
+      + '<i class="fa fa-folder-open-o"></i>'
+      + '<span class="folder-name">' + name + '</span>'
+      + '(<span class="task-num">' + num +'</span>)'
+      + '<i class="fa fa-close"></i>'
+      + '</div>'
+      + '<ul class="task-items" data-is-opened="false" data-folder-id=' + name + '></ul>';
+      //插入DOM
+      toBeAddedFolder.innerHTML = folder_tmpl;
+      parentFolder.appendChild(toBeAddedFolder);
+
+      changeHeightOfItemsBox(true, toBeAddedFolder);
+
+    }
+
+
+    /*
+     * 本地数据存储API
+    */
+    var addNewFolder = function(name, parentFolderID, num, level){
+      /*
+       * 首先定义一个构造函数用来存储列表的各个值
+       * 参数说明：
+       * name:新写入的这个分类列表的名字
+       * parentFolderID: 上一级分类文件夹的唯一标示符
+       * num: 这个分类列表下任务的个数
+       * level: 这个分类列表在嵌套列表树中所处的层级
+      */
+      var CreateFolderItem = function(name, parentFolderID, num, level){
+        this.name = name;
+        this.parentFolderID = parentFolderID;
+        this.num = num;
+        this.level = level;
+      }
+      var newFolderObj = new CreateFolderItem(name,parentFolderID,num,level);
+      var newFolderText = JSON.stringify(newFolderObj);
+      localStorage.setItem(name,newFolderText);
+
+    };
+
+    /*
+     * 渲染嵌套列表方法
+    */
+    var paintNestedList = function(){
+      var folderTree = [];
+      var lenOfKeys = localStorage.length,
+          i;
+      var lenOfLevels,
+          j,k;
+      //得到线性的列表树
+      for(i=0; i<lenOfKeys; i++){
+        var key = localStorage.key(i);
+        var value = localStorage.getItem(key);
+        var valueInObj = JSON.parse(value);
+        var level = valueInObj.level;
+        //如果folderTree[level]不存在，说明当前是level层的第一个节点，将这个item初始化为一个数组
+        if( !folderTree[level] ){
+          folderTree[level] = [];
+        }
+        folderTree[level].push(valueInObj);
+      } 
+      //通过线性列表树一层一层地渲染
+      lenOfLevels = folderTree.length;
+      for(j=0; j<lenOfLevels; j++){
+        var lenOfFoldersOfThisLevel = folderTree[j].length;
+        for(k=0; k<lenOfFoldersOfThisLevel; k++){
+          var parentFolder = document.querySelector('[data-folder-id=' + folderTree[j][k].parentFolderID + ']');
+          var name = folderTree[j][k].name;
+          var num = folderTree[j][k].num;
+          var level = folderTree[j][k].level;
+          paintFolderNode(name, parentFolder, num, level);
+        }
+      }
+    }
+
   //----------   End Utilty Method  -----------------------
 
   //----------   Begin DOM Method  ------------------------
+  paintNestedList();
 
   var task_total_num = document.querySelector('#task-total-num');
-  var all_folders_zone = document.querySelector('.todo-shell-category');
+  var all_folders_zone = document.querySelector('.todo-shell-category-lists');
   var add_folder_btn = document.querySelector('.todo-shell-category-add-btn');
   var items = document.querySelectorAll('.item');
   var folder_name_boxes = document.querySelectorAll('.folder-name-box');
@@ -161,22 +254,23 @@ var category = (function(){
     * 点击输入框上的“添加”按钮，添加新分类
     */
     submit_new_folder_btn.addEventListener('click',function(e){
+
       var new_folder_name = new_folder_name_input.value;
       //新节点要插入的容器
       var toBeAddedBox = selected_folder.nextElementSibling;
-      //当前容器的高度，如果不动态增加这个高度，除非用户点击父节点下拉，新节点不能立即显示在页面中
-
-      //创建待添加的新分类节点
-      var toBeAddedFolder = document.createElement('li');
-      toBeAddedFolder.setAttribute('data-has-child','false');
-      toBeAddedFolder.className = 'task-folder';
-      toBeAddedFolder.innerHTML = folder_tmpl;
-      //将用户输入的新分类名称填入
-      toBeAddedFolder.querySelector('.folder-name').innerHTML = new_folder_name;
-      toBeAddedBox.appendChild(toBeAddedFolder);
-      changeHeightOfItemsBox(true,toBeAddedFolder);
+      //取得父分类文件夹节点的层级
+      var parentNodeLevel = parseInt(selected_folder.getAttribute('data-tree-level'));
+      //取得父容器的ID
+      var parentFolderID = toBeAddedBox.getAttribute('data-folder-id');
+      var newNodeLevel = parentNodeLevel + 1;
+      var num = 0; //新生成的分类文件夹默认子任务数为零
+      //渲染节点
+      paintFolderNode(new_folder_name, toBeAddedBox, num, newNodeLevel);
+      //将数据存入localStorage
+      addNewFolder(new_folder_name, parentFolderID, 0, newNodeLevel);
       add_folder_form.style.display = 'none';
       new_folder_name_input.value = '';
+
     },false);
 
     /*
@@ -186,8 +280,6 @@ var category = (function(){
       add_folder_form.style.display = 'none';
       new_folder_name_input.value = '';
     }),false;
-
-
 
   //----------   End Event Handlers  ----------------------
 
