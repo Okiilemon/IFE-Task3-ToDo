@@ -1,159 +1,15 @@
-var category = (function(){
+var todoDOM = (function(){
 
+  //===================    Begin Category Module  ===================  
+  
   //----------   Begin Module Scope Variables  ------------
 
-  //每个item或者task的高度
-  var height_per_item = 29;
   //当前被选中的分类文件夹
   var selected_folder; 
         
   //----------   End Module Scope Variables  --------------
 
-  //----------   Begin Utilty Method  ---------------------
-
-  /*
-  * 控制下拉列表动画
-  */
-  var dropDownList = function(taskFolder){
-    var taskItems = taskFolder.querySelector('.task-items');
-    var num_of_items = taskItems.querySelectorAll('li').length;
-    var open_folder_icon = taskFolder.querySelector('.fa-folder-open-o');
-    var close_folder_icon = taskFolder.querySelector('.fa-folder');
-    var is_opened = taskItems.getAttribute('data-is-opened');
-      if(is_opened == 'true'){
-        taskItems.style.maxHeight = '';
-        close_folder_icon.style.display = 'inline';
-        open_folder_icon.style.display = 'none';
-        taskItems.setAttribute('data-is-opened','false');
-      }
-      else {
-        taskItems.style.maxHeight = num_of_items * height_per_item + 'px';
-        close_folder_icon.style.display = 'none';
-        open_folder_icon.style.display = 'inline';
-        taskItems.setAttribute('data-is-opened','true');
-
-      }
-    };
-    
-    /*
-     * 动态地去增加或减少列表树中自身以及父节点的高度，
-     * 否则新增加的节点不能立即动态地显示在页面中，
-     * 会由于父节点的overflow:hidden而遮盖掉
-    */
-    var changeHeightOfItemsBox = function(changeType,newFolder){
-      var item_boxes = document.querySelectorAll('.task-items');
-      var lenOfFolders = item_boxes.length;
-      var i,current_box_height;
-
-      for(i=0; i<lenOfFolders; i++){
-        if(item_boxes[i].contains(newFolder)){
-          var current_Box_Height = parseInt(window.getComputedStyle(item_boxes[i],null).getPropertyValue('max-height'));
-          if(changeType){
-            item_boxes[i].style.maxHeight = current_Box_Height + height_per_item + 'px';
-          }
-          else{
-            item_boxes[i].style.maxHeight = current_Box_Height - height_per_item + 'px';
-          }
-        }
-      }
-    };
-
-    /*
-     * 渲染单个分类列表节点方法
-     * 参数说明：
-     * name:新写入的这个分类列表的名字
-     * parentFolderID: 上一级分类文件夹的唯一标示符（文件夹的名字）
-     * num: 这个分类列表下任务的个数
-     * level: 这个分类列表在嵌套列表树中所处的层级     
-     * 
-    */
-    var paintFolderNode = function(name, parentFolder, num, level){
-
-      //创建待添加的新分类节点
-      var toBeAddedFolder = document.createElement('li');
-      toBeAddedFolder.setAttribute('data-has-child','false');
-      toBeAddedFolder.className = 'task-folder';
-      folder_tmpl = 
-        '<div class="folder-name-box" data-folder-selected="false" data-tree-level=' + level + '>'
-      + '<i class="fa fa-folder"></i>'
-      + '<i class="fa fa-folder-open-o"></i>'
-      + '<span class="folder-name">' + name + '</span>'
-      + '(<span class="task-num">' + num +'</span>)'
-      + '<i class="fa fa-close"></i>'
-      + '</div>'
-      + '<ul class="task-items" data-is-opened="false" data-folder-id=' + name + '></ul>';
-      //插入DOM
-      toBeAddedFolder.innerHTML = folder_tmpl;
-      parentFolder.appendChild(toBeAddedFolder);
-
-      changeHeightOfItemsBox(true, toBeAddedFolder);
-
-    }
-
-
-    /*
-     * 本地数据存储API
-    */
-    var addNewFolder = function(name, parentFolderID, num, level){
-      /*
-       * 首先定义一个构造函数用来存储列表的各个值
-       * 参数说明：
-       * name:新写入的这个分类列表的名字
-       * parentFolderID: 上一级分类文件夹的唯一标示符
-       * num: 这个分类列表下任务的个数
-       * level: 这个分类列表在嵌套列表树中所处的层级
-      */
-      var CreateFolderItem = function(name, parentFolderID, num, level){
-        this.name = name;
-        this.parentFolderID = parentFolderID;
-        this.num = num;
-        this.level = level;
-      }
-      var newFolderObj = new CreateFolderItem(name,parentFolderID,num,level);
-      var newFolderText = JSON.stringify(newFolderObj);
-      localStorage.setItem(name,newFolderText);
-
-    };
-
-    /*
-     * 渲染嵌套列表方法
-    */
-    var paintNestedList = function(){
-      var folderTree = [];
-      var lenOfKeys = localStorage.length,
-          i;
-      var lenOfLevels,
-          j,k;
-      //得到线性的列表树
-      for(i=0; i<lenOfKeys; i++){
-        var key = localStorage.key(i);
-        var value = localStorage.getItem(key);
-        var valueInObj = JSON.parse(value);
-        var level = valueInObj.level;
-        //如果folderTree[level]不存在，说明当前是level层的第一个节点，将这个item初始化为一个数组
-        if( !folderTree[level] ){
-          folderTree[level] = [];
-        }
-        folderTree[level].push(valueInObj);
-      } 
-      //通过线性列表树一层一层地渲染
-      lenOfLevels = folderTree.length;
-      for(j=0; j<lenOfLevels; j++){
-        var lenOfFoldersOfThisLevel = folderTree[j].length;
-        for(k=0; k<lenOfFoldersOfThisLevel; k++){
-          var parentFolder = document.querySelector('[data-folder-id=' + folderTree[j][k].parentFolderID + ']');
-          var name = folderTree[j][k].name;
-          var num = folderTree[j][k].num;
-          var level = folderTree[j][k].level;
-          paintFolderNode(name, parentFolder, num, level);
-        }
-      }
-    }
-
-  //----------   End Utilty Method  -----------------------
-
   //----------   Begin DOM Method  ------------------------
-  paintNestedList();
 
   var task_total_num = document.querySelector('#task-total-num');
   var all_folders_zone = document.querySelector('.todo-shell-category-lists');
@@ -204,9 +60,21 @@ var category = (function(){
         return;
       }
       else if(e.target.className == 'fa fa-close'){
-        var parent = e.target.parentElement.parentElement.parentElement;
-        var target = e.target.parentElement.parentElement;
-        parent.removeChild(target);
+        var container = e.target.parentElement.parentElement.parentElement;
+        var folder_name_box = e.target.parentElement;
+        var target = folder_name_box.parentElement;
+        var key = folder_name_box.querySelector('.folder-name').innerHTML;
+        var childrenFolder = folder_name_box.nextElementSibling.querySelectorAll('.task-folder');
+        if(childrenFolder){
+          var lenOfChildernFolder = childrenFolder.length,
+              i;
+          for(i=0; i<lenOfChildernFolder; i++){
+            var keyOfChildrenFolder = childrenFolder[i].querySelector('.folder-name').innerHTML;
+            localStorage.removeItem(keyOfChildrenFolder);
+          }
+        }
+        localStorage.removeItem(key);
+        container.removeChild(target);
       }
       // 当点击的区域属于某个任务文件夹 folder-name-box
       else{
@@ -262,12 +130,19 @@ var category = (function(){
       var parentNodeLevel = parseInt(selected_folder.getAttribute('data-tree-level'));
       //取得父容器的ID
       var parentFolderID = toBeAddedBox.getAttribute('data-folder-id');
+
       var newNodeLevel = parentNodeLevel + 1;
-      var num = 0; //新生成的分类文件夹默认子任务数为零
+      
       //渲染节点
-      paintFolderNode(new_folder_name, toBeAddedBox, num, newNodeLevel);
+      paintFolderNode(new_folder_name, toBeAddedBox, 0, newNodeLevel);
       //将数据存入localStorage
-      addNewFolder(new_folder_name, parentFolderID, 0, newNodeLevel);
+      var newFolderItem = {
+        name: new_folder_name,
+        parentFolderID: parentFolderID,
+        num: 0,
+        level: newNodeLevel
+      };
+      toDoStorage.addItem('folder', newFolderItem);
       add_folder_form.style.display = 'none';
       new_folder_name_input.value = '';
 
@@ -279,11 +154,19 @@ var category = (function(){
     close_add_folder_form.addEventListener('click',function(){
       add_folder_form.style.display = 'none';
       new_folder_name_input.value = '';
-    }),false;
+    }), false;
+    
+    
+//-------------------   End Event Handlers  ----------------------
+  
+//===================    End Category Module  ===================  
+   
+   
+//===================  Begin Task Module  ======================
+   
+//-------------------   Begin DOM Method  ------------------------
 
-  //----------   End Event Handlers  ----------------------
 
-  //----------   Begin Public Method  ---------------------
-  //----------   End Public Method  -----------------------
+
 
 })();
