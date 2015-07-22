@@ -193,7 +193,9 @@ var todoDOM = (function(){
     var targetIndex = parseInt(e.target.getAttribute('data-index'));
     var movingDistance = (targetIndex * size + 16 ) + 'px';
     active_underline.style.left = movingDistance;
-    
+    //切换这里有BUG
+    paintTaskNodeOfTypeColumn(e.target.innerHTML);
+        
   }, false)
 
   add_new_task_btn.addEventListener('click',function(){

@@ -166,7 +166,7 @@ var paintTaskNodeOfFolderTree = (function () {
  * @param:
  * type: {string} 
 */
-var paintTaskNodeOfTypeColumn = (function (type) {
+var paintTaskNodeOfTypeColumn = function (type) {
   var taskListArray = toDoStorage.getItemListArray('task');
   var lenOfTasks = taskListArray.length;
   if (!lenOfTasks) return;
@@ -176,7 +176,7 @@ var paintTaskNodeOfTypeColumn = (function (type) {
   var typedTaskArr = [];
   var ddl_box_container = document.querySelector('.todo-shell-task-lists');
   
-  //首先按照任务是否完成的类别或者是全部，将对应的完成时间取出并放进数组
+  //首先按照任务是否完成的类别或者是全部，将对应的任务取出并放进数组
   for (i = 0; i < lenOfTasks; i++) {
     if (type !== 'all') {
       if (taskListArray[i].type === type) {
@@ -208,37 +208,46 @@ var paintTaskNodeOfTypeColumn = (function (type) {
     var task_item = document.createElement('li');
     task_item.className = 'task-item';
     var task_item_tmpl = typedTaskArr[j].name;
-    if (type === 'done') {
-      task_item_tmpl += '<i class="fa fa-check"></i>';
-    }
-    task_item.innerHTML = task_item_tmpl;
+    var date_type_ddl = new Date(typedTaskArr[j].ddl);
+    var timestamp = Date.parse(date_type_ddl.toString());
+    var ddl_box; 
     //如果当前这个日期还不存在，那么就渲染该日期节点
     if (!temp_unique_ddl_obj[typedTaskArr[j].ddl]) {
-      var date_type_ddl = new Date(typedTaskArr[j].ddl);
       var year = date_type_ddl.getFullYear();
       var month = date_type_ddl.getMonth() + 1;
-      var day = date_type_ddl.getDate();
-      var ddl_box = document.createElement('ul');
+      month = month < 10 ? '0' + month : month;
+      var day = date_type_ddl.getDate() < 10 ? '0' + date_type_ddl.getDate() : date_type_ddl.getDate();
+      ddl_box = document.createElement('ul');
       ddl_box.className = 'time-box';
-      ddl_box.innerHTML = '<div class="time-title-box">' + year + '-' + month + '-' + day + '</div>';
+      var time_title_tmpl = year + '-' + month + '-' + day;
+      //如果是还未完成的任务再渲染一个'距XXX天'的HTML
+      if (typedTaskArr[j].type === 'todo') {
+        var now = new Date();
+        var now_time_stamp = Date.parse(now.toString());
+        var remainingDays = Math.round((timestamp - now_time_stamp) / (1000 * 60 * 60 * 24 ));
+        time_title_tmpl += '<span class="remaining-days"><i class="fa fa-clock-o"></i>' + remainingDays + '天</span>';
+      }
+      //如果是已经完成的任务就渲染一个'勾'的icon
+      else { 
+        task_item_tmpl += '<i class="fa fa-check"></i>';        
+      }
+      ddl_box.innerHTML = '<div class="time-title-box" data-timestamp=' + timestamp + '>' + time_title_tmpl + '</div>';
       ddl_box_container.appendChild(ddl_box);
       
       //把这个已经渲染过的日期存进对象，做一个标记
       temp_unique_ddl_obj[typedTaskArr[j].ddl] = 1;
-      
-      //渲染任务节点
-      ddl_box.appendChild(task_item);
     }
-    esle {
+    else {
       //找到已经存在的这个日期节点，然后插入
+      ddl_box = document.querySelector('[data-timestamp="' + timestamp + '"]').parentElement;
     }
-
-
-
+    //渲染任务节点
+    task_item.innerHTML = task_item_tmpl;    
+    ddl_box.appendChild(task_item);
   }
 
-})('all');
-
+};
+paintTaskNodeOfTypeColumn('all');
 
 /*
  * 日期有效性检查&格式化方法
@@ -250,7 +259,13 @@ var paintTaskNodeOfTypeColumn = (function (type) {
 */
 var dateValidityCheck = function (dateString) {
   var dateArr = dateString.split('-');
-  if (dateArr.length < 3) {
+  var flagOfDateFormat = true, i;
+  for (i = 0; i < dateArr.length; i++) {
+    if (/\w\s/.test(dateArr[i])) {
+      flagOfDateFormat = false;
+    }
+  }
+  if (dateArr.length < 3 || !flagOfDateFormat) {
     return false;
   }
   else {
@@ -261,7 +276,7 @@ var dateValidityCheck = function (dateString) {
       return false;
     }
     else {
-      if (9 < year && year < 99) {
+      if (year < 100) {
         year += 2000;
       }
       var ddl = new Date(year, month - 1, day);
@@ -289,16 +304,19 @@ var newTaskInfoCheckandFormatted = function (name, ddl, parentFolderID, info) {
     return;
   }
   if (!dateIsValid) {
+    error_input_prompt.style.display = 'block';
     error_input_prompt.innerHTML = '日期格式有误！';
     return;
   }
   var ddl_Date_obj = dateIsValid;
+  var now = new Date();
+  var type = now > ddl_Date_obj ? 'done' : 'todo';
   var new_task_obj = {
     parentFolderID: parentFolderID,
     name: name,
     ddl: ddl_Date_obj,
     info: info,
-    type: 'todo'
+    type: type
   };
   return new_task_obj;
 
