@@ -1,58 +1,149 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <title>HTML Layout</title>
-    <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/todo.css"/>
-</head>
-<body>
-    <div id="todo">
-        <div class="todo-shell-category column">
-            <div class="todo-shell-category-total">所有任务(<span id="task-total-num">0</span>)
-            </div>
-            <div class="todo-shell-category-lists">
-                <div class="todo-shell-category-title folder-name-box" data-folder-selected="false" data-tree-level="-1">
-                    <span class="folder-name">分类列表</span>
+    
+    <head>
+        <meta charset="UTF-8">
+        <title>HTML Layout</title>
+        <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/todo.css" />
+    </head>
+    
+    <body>
+        <div id="todo">
+            <div class="todo-shell-category column">
+                <div class="todo-shell-category-total">所有任务(
+                    <span id="task-total-num">0</span>)</div>
+                <div class="todo-shell-category-lists">
+                    <div class="todo-shell-category-title folder-name-box" data-folder-selected="false" data-tree-level="-1">
+                        <span class="folder-name">分类列表</span>
+                    </div>
+                    <ul class="todo-shell-category-folders" data-folder-id="root-folder">
+                        <li class="task-folder">
+                            <div class="folder-name-box" data-folder-selected="true" data-tree-level="0">
+                                <i class="fa fa-folder"></i>
+                                <i class="fa fa-folder-open-o"></i>
+                                <span class="folder-name">默认分类</span>(
+                                <span class="task-num">0</span>)</div>
+                            <ul class="task-items-box" data-is-opened="false" data-folder-id="default-folder"></ul>
+                        </li>
+                    </ul>
                 </div>
-                <ul class="todo-shell-category-folders" data-folder-id="root-folder">
-                    <li class="task-folder">
-                        <div class="folder-name-box" data-folder-selected="true" data-tree-level="0">
-                            <i class="fa fa-folder"></i>
-                            <i class="fa fa-folder-open-o"></i>
-                            <span class="folder-name">默认分类</span>
-                            (<span class="task-num">0</span>)
+                <div class="todo-shell-category-add-btn">
+                    <i class="fa fa-plus"></i>
+                    <span>添加分类</span>
+                </div>
+                <div class="todo-shell-category-add-form">
+                    <form>
+                        <div id="close-form-btn">
+                            <i class="fa fa-close fa-3x"></i>
                         </div>
-                        <ul class="task-items" data-is-opened="false" data-folder-id="default-folder"></ul>
-                    </li>
+                        <div class="selected-folder-info">在
+                            <span id='selected-folder'></span>下添加分类</div>
+                        <div class="input-box">
+                            <input type="text" id="new-folder-title" placeholder="新分类的名称..." autofocus="autofocus"></input>
+                            <span id="plus-btn">
+                                <i class="fa fa-plus fa-4x"></i>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="todo-shell-task column">
+                <ul class="task-type-area">
+                    <li class="task-type-btn" data-index="0">All</li>
+                    <li class="task-type-btn" data-index="1">ToDo</li>
+                    <li class="task-type-btn" data-index="2">Done</li>
+                    <span class="active-underline"></span>
                 </ul>
+                <div class="todo-shell-task-lists">
+                    <!--<ul class="time-box">
+                        <div class="time-title-box">2015-9-1</div>
+                        <li class="task-item">阅读
+                            <i class="fa fa-check"></i>
+                        </li>
+                        <li class="task-item">运动</li>
+                        <li class="task-item">电影
+                            <i class="fa fa-check"></i>
+                        </li>
+                    </ul>
+                    <ul class="time-box">
+                        <div class="time-title-box">2015-8-2</div>
+                        <li class="task-item">JS核心原理</li>
+                    </ul>
+                    <ul class="time-box">
+                        <div class="time-title-box">2015-8-8</div>
+                        <li class="task-item">学年论文
+                            <i class="fa fa-check"></i>
+                        </li>
+                    </ul>-->
+                </div>
+                <div class="todo-shell-task-add-btn">
+                    <i class="fa fa-plus"></i>
+                    <span>添加任务</span>
+                </div>
             </div>
-            <div class="todo-shell-category-add-btn">
-                <i class="fa fa-plus"></i><span>添加分类</span>
-            </div>
-            <div class="todo-shell-category-add-form">
-                <form>
-                    <div id="close-form-btn"><i class="fa fa-close fa-3x"></i></div>
-                    <div class="selected-folder-info">在<span id='selected-folder'></span>下添加分类</div>
-                    <div class="input-box">
-                        <input type="text" id="new-folder-title" placeholder="新分类的名称..." autofocus="autofocus"></input>
-                        <span id="plus-btn"><i class="fa fa-plus fa-4x"></i></span>
-                    </div>                
-                </form>
+            <div class="todo-shell-info column">
+                <div class="todo-shell-info-area">
+                    <div id="info-display-area">
+                        <div class="display-head-area info-head-area">
+                            <div class="info-task-name" title="任务名称">
+                                <i class="fa fa-leaf"></i>
+                                <span class="task-name">学年论文</span>
+                            </div>
+                            <div class="info-affiliated-folder" title="所属分类">
+                                <i class="fa fa-folder"></i>
+                                <span class="affiliated-folder-name">期末备战</span>
+                            </div>
+                            <div class="info-task-ddl" title="预计完成时间">
+                                <i class="fa fa-calendar-o"></i>
+                                <span class="task-ddl">2015/7/6</span>
+                            </div>
+                        </div>
+                        <div class="display-content-area">函数声明的特点： 函数声明提升，it will be evaluated foremost any other expressions contained in a scope. 非标准的，在不同的环境下有不同的表现。原因：函数声明只允许出现在全局环境或是函数体中，不能够出现在block
+                            { } 中，such as that of if, while or for statements ，这是因为块语句中只允许声明语句</div>
+                        <div class="edit-btn" ti>
+                            <i class="fa fa-pencil"></i>编辑任务
+                        </div>
+                    </div>
+                    <div id="info-edit-area">
+                        <div class="edit-form-head-area info-head-area">
+                            <div class="info-task-name">
+                                <i class="fa fa-leaf"></i>
+                                <label for="new-task-name">任务名称</label>
+                                <input type="text" id="new-task-name" autofocus="autofocus">
+                            </div>
+                            <div class="info-affiliated-folder">
+                                <i class="fa fa-folder"></i>
+                                <label for="new-affiliated-folder">所属分类</label>
+                                <select id="new-affiliated-folder">
+                                    <option>aaa</option>
+                                    <option>bbb</option>
+                                    <option>ccc</option>
+                                </select>
+                            </div>
+                            <div class="info-task-ddl">
+                                <i class="fa fa-calendar-o"></i>
+                                <label for="new-task-ddl">截止日期</label>
+                                <input type="text" id="new-task-ddl" placeholder="日期格式：yyyy-mm-dd">
+                            </div>
+                            <div class="input-error-prompt">! 日期格式有误，请正确输入</div>
+                        </div>
+                        <div class="edit-form-content-area">
+                            <textarea name="task-info" id="task-info-input" cols="60" rows="25" placeholder="任务描述信息..."></textarea>
+                            <div class="info-btn-wrapper">
+                                <div class="ok info-btn ">
+                                    <i class="fa fa-plus"></i>确认添加</div>
+                                <div class="cancel info-btn">
+                                    <i class="fa fa-close"></i>取消</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="todo-shell-task column">
-            <ul class="task-type-area">
-                <li class="task-type-btn">All</li>
-                <li class="task-type-btn">ToDo</li>
-                <li class="task-type-btn">Done</li>
-                <span class="active-underline"></span>
-            </ul>
-        </div>
-        <div class="todo-shell-edit column"></div>
-    </div>
-    <script src="js/todo.dataManage.js"></script>
-    <script src="js/todo.util.js"></script>
-    <script src="js/todo.shell.js"></script>
-</body>
+        <script src="js/todo.dataManage.js"></script>
+        <script src="js/todo.util.js"></script>
+        <script src="js/todo.shell.js"></script>
+    </body>
+
 </html>

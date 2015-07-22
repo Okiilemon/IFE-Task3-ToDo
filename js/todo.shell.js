@@ -40,13 +40,13 @@ var todoDOM = (function(){
   */
     all_folders_zone.addEventListener('click',function(e){
       var i,j,item_is_active,folder_is_active;
-      var items = this.querySelectorAll('.item');
+      var items = this.querySelectorAll('.task-item');
       var folder_name_boxes = this.querySelectorAll('.folder-name-box');
-      lenOfFolders = folder_name_boxes.length;
-      lenOfItems = items.length;
+      var lenOfFolders = folder_name_boxes.length;
+      var lenOfTaskItems = items.length;
       // 当点击的区域属于某个任务 item
-      if(e.target.className == 'item' || e.target.parentElement.className == 'item'){
-        for(j=0; j<lenOfItems; j++){
+      if(e.target.className == 'task-item' || e.target.parentElement.className == 'task-item'){
+        for(j=0; j<lenOfTaskItems; j++){
           item_is_active = items[j].getAttribute('data-item-selected');
           //将当前的 item active 样式取消
           if(item_is_active == 'true'){
@@ -63,17 +63,17 @@ var todoDOM = (function(){
         var container = e.target.parentElement.parentElement.parentElement;
         var folder_name_box = e.target.parentElement;
         var target = folder_name_box.parentElement;
-        var key = folder_name_box.querySelector('.folder-name').innerHTML;
+        var currentFolderName = folder_name_box.querySelector('.folder-name').innerHTML;
         var childrenFolder = folder_name_box.nextElementSibling.querySelectorAll('.task-folder');
         if(childrenFolder){
           var lenOfChildernFolder = childrenFolder.length,
               i;
           for(i=0; i<lenOfChildernFolder; i++){
-            var keyOfChildrenFolder = childrenFolder[i].querySelector('.folder-name').innerHTML;
-            localStorage.removeItem(keyOfChildrenFolder);
+            var nameOfChildrenFolder = childrenFolder[i].querySelector('.folder-name').innerHTML;
+            toDoStorage.removeItem(nameOfChildrenFolder);
           }
         }
-        localStorage.removeItem(key);
+        toDoStorage.removeItem('folder', currentFolderName);
         container.removeChild(target);
       }
       // 当点击的区域属于某个任务文件夹 folder-name-box
@@ -87,7 +87,7 @@ var todoDOM = (function(){
           //给点击的 folder 加上 Active 样式
           if(folder_name_boxes[i].contains(e.target)){
             folder_name_boxes[i].setAttribute('data-folder-selected','true');
-            if(i){ //否则当点击'分类列表’这个特殊folder的时候第一个task-items会出现下拉效果
+            if(i){ //否则当点击'分类列表’这个特殊folder的时候第一个task-items-box会出现下拉效果
               dropDownList(folder_name_boxes[i].parentElement);
             }
           }
@@ -166,7 +166,68 @@ var todoDOM = (function(){
    
 //-------------------   Begin DOM Method  ------------------------
 
+  var task_type_area = document.querySelector('.task-type-area');
+  var active_underline = document.querySelector('.active-underline');
+  var add_new_task_btn = document.querySelector('.todo-shell-task-add-btn');
+  var task_edit_btn = document.querySelector('.edit-btn');
 
+  //展示任务‘表单’元素
+  var info_display_area = document.querySelector('#info-display-area');
+  var display_task_name = info_display_area.querySelector('.task-name'); 
+  var display_affiliated_folder = info_display_area.querySelector('.affiliated-folder-name');
+  var display_task_ddl = info_display_area.querySelector('.task-ddl');
+  var display_task_info = info_display_area.querySelector('.display-content-area');  
+  //编辑任务表单元素
+  var info_edit_area = document.querySelector('#info-edit-area');
+  var edit_task_name_input = info_edit_area.querySelector('#new-task-name'); 
+  var edit_affiliated_folder_select = info_edit_area.querySelector('#new-affiliated-folder');
+  var edit_task_ddl_input = info_edit_area.querySelector('#new-task-ddl');
+  var edit_task_info_textarea = info_edit_area.querySelector('#task-info-input');
+  var submit_task_info_btn = info_edit_area.querySelector('.ok');
+  var cancel_task_info_btn = info_edit_area.querySelector('.cancel');
+  
+  //任务分类All,todo,done
+  task_type_area.addEventListener('click', function (e) { 
+    
+    var size = parseInt(getComputedStyle(this, null).getPropertyValue('width')) / 3;
+    var targetIndex = parseInt(e.target.getAttribute('data-index'));
+    var movingDistance = (targetIndex * size + 16 ) + 'px';
+    active_underline.style.left = movingDistance;
+    
+  }, false)
+
+  add_new_task_btn.addEventListener('click',function(){
+
+      info_edit_area.style.display = 'block';
+      info_display_area.style.display = 'none';
+
+  },false)
+
+  submit_task_info_btn.addEventListener('click',function(){
+
+    //将用户输入的数据取出并存入localStorage
+    var name = edit_task_name_input.value;
+    var parentFolderID = edit_affiliated_folder_select.value;
+    var ddl = edit_task_ddl_input.value;
+    var info = edit_task_info_textarea.value;
+
+    var new_task_obj = newTaskInfoCheckandFormatted(name, ddl, parentFolderID, info);
+    if (!new_task_obj) return;
+    
+    toDoStorage.addItem('task', new_task_obj);
+    
+    var toBeAddedFolder = document.querySelector('[data-folder-id=' + parentFolderID + ']');
+    paintTaskNodeInFolder(name, toBeAddedFolder);
+
+    display_task_name.innerHTML = name;
+    display_task_ddl.innerHTML = ddl;
+    display_affiliated_folder.innerHTML = parentFolderID;
+    display_task_info.innerHTML = info;   
+    info_edit_area.style.display = 'none';
+    info_display_area.style.display = 'block';
+
+
+  },false)
 
 
 })();

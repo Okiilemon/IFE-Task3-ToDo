@@ -3,8 +3,16 @@
   * 说明：
   * 在这个应用中，有两张表
   * 一个是分类列表folder表，一个是任务task表
-  * 一个localStorage存储一个表
+  * 一个localStorage项存储一个表
   * 每张表是一个对象数组，数组每一项就是一个folder、task对象，用来存储每一项的相关信息
+  * toDoStorage {
+    //有5个方法
+      getItemListArray()
+      getItem()
+      addItem()
+      setItem()
+      removeItem()
+    }�有有  说说才
 */
 var toDoStorage = {};
 

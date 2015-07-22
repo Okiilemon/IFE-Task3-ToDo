@@ -57,17 +57,15 @@ body {
   min-height: 26px;
 }
 
-.task-items {
-  max-height: 0;
+.task-items-box,
+.time-box {
   padding-left: 12px;
   overflow: scroll;
   transition:.4s;
 }
 
-.task-items .item {
-  position: relative;
-  height: 30px;
-  line-height: 24px;
+.task-items-box {
+  max-height: 0;
 }
 
 .fa {
@@ -82,14 +80,21 @@ div[data-folder-selected='true'] {
   background-color: rgba(27, 133, 136,0.1);
 }
 
-.folder-name-box { 
+.folder-name-box,
+.time-title-box,
+.task-items-box .task-item { 
   height: 29px;
   line-height: 29px;
+  cursor: pointer;
+}
+
+.task-items-box .task-item { position: relative; }
+
+.folder-name-box {
   padding-left: 100px;
   margin-left: -100px;
   padding-right: 15px;
   margin-right: -15px;
-  cursor: pointer;
 }
 
 .folder-name-box:hover .fa-close {
@@ -100,20 +105,16 @@ div[data-folder-selected='true'] {
   display: none; 
   position: absolute;
   right: 0;
-  top:4px;
+  top: 6px;
 } 
 
-.item .fa-caret-right {
+.task-item .fa-caret-right {
   position: absolute;
   top: 8px;
   right: 0;
   display: none;
 }
 
-.item span, .item .fa {
-  font-size: 14px;
-  color:#1B8588;
-}
 
 li[data-item-selected='true'] .fa-caret-right {
   display: inline;
@@ -136,7 +137,8 @@ li[data-item-selected='true'] .fa-caret-right {
   margin-right: 5px;
 }
 
-.todo-shell-category-add-btn {
+.todo-shell-category-add-btn,
+.todo-shell-task-add-btn {
   position: absolute;
   bottom: 30px;
   left:50%;
@@ -147,7 +149,8 @@ li[data-item-selected='true'] .fa-caret-right {
   box-sizing: border-box;
 }
 
-.todo-shell-category-add-btn:hover {
+.todo-shell-category-add-btn:hover,
+.todo-shell-task-add-btn:hover {
   border-radius: 5px;
   border:1px solid;
 }
@@ -160,7 +163,7 @@ li[data-item-selected='true'] .fa-caret-right {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .todo-shell-category-add-form .input-box {
@@ -227,17 +230,11 @@ input:focus { outline: none; }
   padding-left: 0;  
 }
 
-.todo-shell-edit { 
-  width: 50%; 
-  background-color: #fff;
-}
-
 .task-type-area {
   position: relative;
   width: 100%;
   height: 30px;
   line-height: 30px;
-  border-bottom: 2px solid #e0ebeb;
   font-size: 0;
 }
 
@@ -248,20 +245,189 @@ input:focus { outline: none; }
   font-size: 16px;
   text-align: center;
   cursor: pointer;
-}
-
-.task-type-btn.active {
-  border-bottom: 3px solid ;
+  box-sizing: border-box;
 }
 
 .active-underline {
   position: absolute;
   bottom: -3px;
-  left: 0;
-  width: 30%;
-  height: 3px;
+  left: 17px;
+  width: 20%;
+  height: 1px;
   background-color: #15BDC3;
+  -webkit-transition: .2s;
+  -moz-transition: .2s;
+  -o-transition: .2s;
 }
+
+.todo-shell-task-lists {
+  padding-left: 8px;
+  padding-top: 26px;
+}
+
+.time-box {
+  padding-bottom: 8px;
+}
+
+.time-title-box {
+  color: #59E9EE
+}
+
+.task-item .fa-check { 
+  color: #59E9EE;
+  margin-left: 5px; 
+} 
+
+/* End Column 2  */
+
+/* Begin Column 3 */
+
+.todo-shell-info { 
+  width: 50%; 
+  background-color: #fff;
+}
+
+.todo-shell-info-area {
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+.info-task-name { 
+  float: left;
+  margin-bottom: 28px; 
+}
+
+.info-affiliated-folder {
+  float: right;
+  margin-right: 6px;
+}
+
+.info-task-ddl {
+  margin-top: 2px;
+  float: left;
+  clear: both;
+}
+
+.info-head-area .fa { margin-right: 3px }
+
+.edit-btn {
+  position: absolute;
+  left: 50%;
+  margin-left: -41px;
+  bottom: 30px;
+  padding: 5px;
+  box-sizing: border-box;
+  cursor: pointer
+}
+
+.edit-btn:hover {
+  border-radius: 5px;
+  border:1px solid;
+}
+
+.edit-btn .fa { margin-right: 5px; }
+
+.info-head-area {
+  border-bottom: 1px dashed; 
+  padding-bottom: 20px; 
+}
+
+/* 清除浮动 */
+.info-head-area:after {
+  content: '';
+  display: block;
+  height: 0;
+  clear: both;
+}
+
+.info-head-area input {
+  font-size: 16px; 
+  line-height: 16px; 
+  height: 20px;
+  border: none;
+  margin-top: 2px;
+  margin-left: 4px;
+  resize: none;
+  border-bottom: 1px solid #15BDC3;
+  color: #333;
+}
+
+.info-head-area select {
+  width: 188px;
+  font-size: 16px; 
+  line-height: 16px; 
+  height: 20px;
+  border: none;
+  margin-top: 2px;
+  margin-left: 4px;
+   -webkit-appearance: none; 
+}
+
+select:focus { outline: none } 
+
+.input-error-prompt {
+  display: none;
+  margin-top: 6px;
+  margin-left: 20px;
+  float: left;
+  color: red;
+}
+
+.edit-form-head-area {
+  border-bottom: none;
+}
+
+.edit-form-content-area textarea {
+  margin-left: -18px;
+  margin-top: 20px;
+  border: 1px solid #f2f2f2;
+  font-size: 16px;
+  color: #333;
+  padding: 10px;
+  resize: none;
+  margin-bottom: 20px;
+}
+
+textarea:focus { outline: none }
+
+.edit-form-content-area {
+  text-align: center;
+}
+
+.info-btn-wrapper {
+  position: relative;
+  left: 0;
+  bottom: 6px;
+}
+
+.edit-form-content-area .info-btn {
+  display: inline-block;
+  width: 49%;
+  text-align: center;
+  cursor: pointer
+}
+
+.info-btn:hover {
+  border-radius: 5px;
+  border:1px solid;
+}
+
+.info-btn .fa {
+  margin-right: 5px;
+}
+
+#info-edit-area { display: none }
+
+.display-content-area {
+  margin-top: 30px;
+  padding-right: 20px;
+}
+
+
+
+
+
+
 
 
 
