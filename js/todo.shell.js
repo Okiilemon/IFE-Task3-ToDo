@@ -169,22 +169,6 @@ var todoDOM = (function(){
   var task_type_area = document.querySelector('.task-type-area');
   var active_underline = document.querySelector('.active-underline');
   var add_new_task_btn = document.querySelector('.todo-shell-task-add-btn');
-  var task_edit_btn = document.querySelector('.edit-btn');
-
-  //展示任务‘表单’元素
-  var info_display_area = document.querySelector('#info-display-area');
-  var display_task_name = info_display_area.querySelector('.task-name'); 
-  var display_affiliated_folder = info_display_area.querySelector('.affiliated-folder-name');
-  var display_task_ddl = info_display_area.querySelector('.task-ddl');
-  var display_task_info = info_display_area.querySelector('.display-content-area');  
-  //编辑任务表单元素
-  var info_edit_area = document.querySelector('#info-edit-area');
-  var edit_task_name_input = info_edit_area.querySelector('#new-task-name'); 
-  var edit_affiliated_folder_select = info_edit_area.querySelector('#new-affiliated-folder');
-  var edit_task_ddl_input = info_edit_area.querySelector('#new-task-ddl');
-  var edit_task_info_textarea = info_edit_area.querySelector('#task-info-input');
-  var submit_task_info_btn = info_edit_area.querySelector('.ok');
-  var cancel_task_info_btn = info_edit_area.querySelector('.cancel');
   
   //任务分类All,todo,done
   task_type_area.addEventListener('click', function (e) { 
@@ -193,43 +177,31 @@ var todoDOM = (function(){
     var targetIndex = parseInt(e.target.getAttribute('data-index'));
     var movingDistance = (targetIndex * size + 16 ) + 'px';
     active_underline.style.left = movingDistance;
-    //切换这里有BUG
-    paintTaskNodeOfTypeColumn(e.target.innerHTML);
-        
+    
+    //对应类型任务的切换
+    switch (targetIndex) { 
+      case 0:
+        paintTaskNodeOfTypeColumn('all');
+        break;
+      case 1:
+        paintTaskNodeOfTypeColumn('todo');
+        break;
+      case 2:
+        paintTaskNodeOfTypeColumn('done');
+        break;
+      default:
+        return;
+    }
+            
   }, false)
 
   add_new_task_btn.addEventListener('click',function(){
 
-      info_edit_area.style.display = 'block';
-      info_display_area.style.display = 'none';
+    paintInfoEditArea();
 
   },false)
 
-  submit_task_info_btn.addEventListener('click',function(){
 
-    //将用户输入的数据取出并存入localStorage
-    var name = edit_task_name_input.value;
-    var parentFolderID = edit_affiliated_folder_select.value;
-    var ddl = edit_task_ddl_input.value;
-    var info = edit_task_info_textarea.value;
-
-    var new_task_obj = newTaskInfoCheckandFormatted(name, ddl, parentFolderID, info);
-    if (!new_task_obj) return;
-    
-    toDoStorage.addItem('task', new_task_obj);
-    
-    var toBeAddedFolder = document.querySelector('[data-folder-id=' + parentFolderID + ']');
-    paintTaskNodeInFolder(name, toBeAddedFolder);
-
-    display_task_name.innerHTML = name;
-    display_task_ddl.innerHTML = ddl;
-    display_affiliated_folder.innerHTML = parentFolderID;
-    display_task_info.innerHTML = info;   
-    info_edit_area.style.display = 'none';
-    info_display_area.style.display = 'block';
-
-
-  },false)
 
 
 })();
