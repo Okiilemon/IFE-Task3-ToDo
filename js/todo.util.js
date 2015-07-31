@@ -58,18 +58,17 @@ var changeHeightOfItemsBox = function (changeType, newNode) {
  * @param:
  * name:{string} 新写入的这个分类列表的名字
  * parentFolderID: {string} 上一级分类文件夹的唯一标示符（文件夹的名字）
- * num: {number} 这个分类列表下任务的个数
  * level: {number} 这个分类列表在嵌套列表树中所处的层级     
  * 
 */
-var paintFolderNode = function (name, parentFolder, num, level) {
+var paintFolderNode = function (name, parentFolder, level) {
 
   //创建待添加的新分类节点
   var toBeAddedFolder = document.createElement('li');
   //toBeAddedFolder.setAttribute('data-has-child','false');
   toBeAddedFolder.className = 'task-folder';
   var folder_tmpl =
-    '<div class="folder-name-box" data-folder-selected="false">'
+    '<div class="folder-name-box" data-folder-selected="false" data-tree-level="' + level + '">'
     + '<i class="fa fa-folder"></i>'
     + '<i class="fa fa-folder-open-o"></i>'
     + '<span class="folder-name">' + name + '</span>'
@@ -89,15 +88,14 @@ var paintFolderNode = function (name, parentFolder, num, level) {
  * 渲染任务节点的方法
  * @param:
  * name: {string} 任务名称
- * ddl: {obj Date()} 任务截止日期
  * parentFolder: {obj node} 父分类文件夹节点
- * state: {bool} 任务完成与否的标志 true 为已完成
 */
-var paintTaskNodeInFolder = function (name, parentFolder) { 
+var paintTaskNodeInFolder = function (name, parentFolder, taskID) { 
   
   //创建待添加的任务节点
   var toBeAddedTask = document.createElement('li');
   toBeAddedTask.className = 'task-item';
+  toBeAddedTask.setAttribute('data-task-id', taskID);
   var task_tmpl = '<i class="fa fa-leaf"></i><span class="task-name">' + name + '</span><i class="fa fa-caret-right"></i>';
   toBeAddedTask.innerHTML = task_tmpl;
   //将该任务节点插入父分类文件夹
@@ -157,7 +155,7 @@ var paintTaskNodeOfFolderTree = (function () {
   for (i = 0; i < lenOfTasks; i++) {
     var parentFolder = document.querySelector('[data-folder-id=' + taskListArray[i].parentFolderID + ']');
     var name = taskListArray[i].name;
-    paintTaskNodeInFolder(name, parentFolder);
+    paintTaskNodeInFolder(name, parentFolder, taskListArray[i].taskID);
   }
 })();
 
@@ -199,17 +197,19 @@ var paintTimeNode = function (ddl_string, type) {
 /*
  * 在分类栏时间节点下渲染任务节点的方法
  * @param 
+ * taskID {string} 唯一标示任务的ID
  * name {string} 任务名称
  * ddl_string {string}  序列化之后或之前的任务日期字符串
  * type {string} 任务类型
  * parentTimeNode {object node} [optional] 父时间节点
 */
 
-var paintTaskNodeOfTimeNode = function (name, ddl_string, type, parentTimeNode) { 
+var paintTaskNodeOfTimeNode = function (taskID, name, ddl_string, type, parentTimeNode) { 
   
   //创建任务节点
   var task_item = document.createElement('li');
   task_item.className = 'task-item';
+  task_item.setAttribute('data-task-id', taskID);
   var task_item_tmpl = name;
   //如果没有传入父时间节点
   if (!parentTimeNode) { 
@@ -280,12 +280,12 @@ var paintTaskNodeOfTypeColumn = function (type) {
     //如果当前这个日期还不存在，那么就渲染该日期节点
     if (!temp_unique_ddl_obj[typedTaskArr[j].ddl]) {
       var timeNode = paintTimeNode(typedTaskArr[j].ddl, typedTaskArr[j].type);
-      paintTaskNodeOfTimeNode(typedTaskArr[j].name, typedTaskArr[j].ddl, typedTaskArr[j].type, timeNode)   
+      paintTaskNodeOfTimeNode(typedTaskArr[j].taskID, typedTaskArr[j].name, typedTaskArr[j].ddl, typedTaskArr[j].type, timeNode)   
       //把这个已经渲染过的日期存进对象，做一个标记
       temp_unique_ddl_obj[typedTaskArr[j].ddl] = 1;
     }
     else {
-      paintTaskNodeOfTimeNode(typedTaskArr[j].name, typedTaskArr[j].ddl, typedTaskArr[j].type);
+      paintTaskNodeOfTimeNode(typedTaskArr[j].taskID, typedTaskArr[j].name, typedTaskArr[j].ddl, typedTaskArr[j].type);
     }
   }
 
@@ -412,9 +412,10 @@ var paintInfoDisplayArea = function (task_obj) {
       name: task_obj.name,
       ddl: time_title_tmpl,
       parentFolderID: task_obj.parentFolderID,
-      info: task_obj.info
+      info: task_obj.info,
+      ddl_obj: task_obj.ddl
     };
-    paintInfoEditArea(task, true);
+    paintInfoEditArea(task);
   };
 
 }
@@ -425,7 +426,7 @@ var paintInfoDisplayArea = function (task_obj) {
  * @param
  * task_obj {object} [optional] 
  */
-var paintInfoEditArea = function (task_obj, change_flag) {
+var paintInfoEditArea = function (task_obj) {
   var info_container = document.querySelector('.todo-shell-info-area');
   var folder_lists = toDoStorage.getItemListArray('folder');
   var lenOfFolders = folder_lists.length, i;
@@ -463,7 +464,7 @@ var paintInfoEditArea = function (task_obj, change_flag) {
   //如果是true 那么渲染‘确认更改’若不是‘确认添加按钮’,这里为了区分是‘添加任务’还是‘编辑任务’中的回调
   if (task_obj) {
     submit_task_info_btn.innerText = '确认更改';
-        
+
     edit_task_name_input.value = task_obj.name;
     edit_affiliated_folder_select.value = task_obj.parentFolderID;
     edit_task_ddl_input.value = task_obj.ddl;
@@ -479,24 +480,48 @@ var paintInfoEditArea = function (task_obj, change_flag) {
     var info = edit_task_info_textarea.value;
 
     var new_task_obj = newTaskInfoCheckandFormatted(taskID, name, ddl, parentFolderID, info);
-    
+
     if (!new_task_obj) return;
 
     if (task_obj) {//响应‘确认更改’的操作
-      toDoStorage.setItem('task', task_obj.taskID, new_task_obj);
+      
+      //创建一个作用域
+      (function () {
+        toDoStorage.setItem('task', task_obj.taskID, new_task_obj);
+        
+        //首先改变分类列表中的视图
+        //先删除原来的节点
+        var foldersContainer = document.querySelector('.todo-shell-category-lists');
+        var currentTaskNode = foldersContainer.querySelector('[data-task-id="' + task_obj.taskID + '"]');
+        var currentParentFolder = document.querySelector('[data-folder-id=' + task_obj.parentFolderID + ']');
+        currentParentFolder.removeChild(currentTaskNode);
+        //再渲染更改后的节点（见else后）
+      
+        //改变时间栏中的视图
+        //先找到时间节点
+        var timestamp = Date.parse(task_obj.ddl_obj.toString());
+        var timeContainer = document.querySelector('.todo-shell-task-lists');
+        var timeBoxNode = timeContainer.querySelector('[data-timestamp="' + timestamp + '"]');
+        var currentTaskNodeInTime = timeBoxNode.querySelector('[data-task-id="' + task_obj.taskID + '"]');
+        var tasksInTimeNode = timeBoxNode.querySelectorAll('.task-item');
+        if (tasksInTimeNode.length > 1) {
+          timeBoxNode.removeChild(currentTaskNodeInTime);
+        }
+        else {
+          timeContainer.removeChild(timeBoxNode.parentElement);
+        }
+      } ());
+
     }
     else { //相应‘确认添加’的操作
       //将用户输入的数据取出并存入localStorage
       toDoStorage.addItem('task', new_task_obj);
-      var toBeAddedFolder = document.querySelector('[data-folder-id=' + parentFolderID + ']');
-      paintTaskNodeInFolder(name, toBeAddedFolder);
-      paintTaskNodeOfTimeNode(name, new_task_obj.ddl, new_task_obj.type);      
     }
-    
-
+    var toBeAddedFolder = document.querySelector('[data-folder-id=' + parentFolderID + ']');
+    paintTaskNodeInFolder(name, toBeAddedFolder, new_task_obj.taskID);
+    paintTaskNodeOfTimeNode(new_task_obj.taskID, name, new_task_obj.ddl, new_task_obj.type);
 
     paintInfoDisplayArea(new_task_obj);
-    
 
   }, false)
 
@@ -504,3 +529,5 @@ var paintInfoEditArea = function (task_obj, change_flag) {
     paintInfoDisplayArea(task_obj);
   }, false)
 }
+
+

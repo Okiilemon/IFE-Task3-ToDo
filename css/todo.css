@@ -60,7 +60,7 @@ body {
 .task-items-box,
 .time-box {
   padding-left: 12px;
-  overflow: scroll;
+  overflow: hidden;
   transition:.4s;
 }
 
@@ -318,6 +318,10 @@ input:focus { outline: none; }
 .info-affiliated-folder {
   float: right;
   margin-right: 12px;
+}
+
+.display-head-area .info-affiliated-folder {
+  margin-right: 56px;
 }
 
 .info-task-ddl {

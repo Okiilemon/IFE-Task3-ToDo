@@ -17,31 +17,32 @@
 var toDoStorage = {};
 
 /*
- * 获取key对应的 localStorage value,也就是储存 folder 或者 task 的数组对象
+ * 获取type对应的 localStorage value,也就是储存 folder 或者 task 的数组对象
 */
-toDoStorage.getItemListArray = function (key) {
+toDoStorage.getItemListArray = function (type) {
 
-  var itemListArray = JSON.parse(localStorage.getItem(key));
+  var itemListArray = JSON.parse(localStorage.getItem(type));
   //如果还没有值，初始化为一个数组
   return itemListArray ? itemListArray : [];
 
 };
 
 /*
-  * 查找某一项属性值的方法
+  * 通过一对key&value 获得 key === value 的这个对象
   * 参数说明：
-  * key: folder 或者 task
-  * itemKey: folder 或者 task 的某一项属性
+  * type: folder 或者 task
+  * key: folder 或者 task 的某一项属性
+  * value: 所要匹配的属性值
 */
-toDoStorage.getItem = function (key, name, itemKey) {
+toDoStorage.getItem = function (type, key, value) {
 
-  var itemListArray = this.getItemListArray(key);
+  var itemListArray = this.getItemListArray(type);
   var len = itemListArray.length,
     i;
   if (!len) return;
   for (i = 0; i < len; i++) {
-    if (itemListArray[i]['name'] === name) {
-      return itemListArray[i][itemKey];
+    if (itemListArray[i][key] === value) {
+      return itemListArray[i];
     }
   }
 
@@ -50,28 +51,28 @@ toDoStorage.getItem = function (key, name, itemKey) {
 /*
   * 新增某一项的方法
   * 参数说明
-  * key: folder 或者 task
+  * type: folder 或者 task
   * itemObj: 新添的哈希列表对象 一个folder或task的信息对象
 */
-toDoStorage.addItem = function (key, itemObj) {
+toDoStorage.addItem = function (type, itemObj) {
 
-  var itemListArray = this.getItemListArray(key);
+  var itemListArray = this.getItemListArray(type);
   itemListArray.push(itemObj)
-  localStorage.setItem(key, JSON.stringify(itemListArray));
+  localStorage.setItem(type, JSON.stringify(itemListArray));
 
 };
 
 /*
   * 修改某一项某个属性的方法，因为value是一个数组对象，修改起来很不方便，需要封装成一个方法
   * 参数说明：
-  * key: folder 或者 task 
+  * type: folder 或者 task 
   * name: folder 或者 task 的名字
   * options: 一个哈希列表
   { item: value } item是要修改的项，value是新的值
 */
-toDoStorage.setItem = function (key, name, options) {
+toDoStorage.setItem = function (type, name, options) {
 
-  var itemListArray = this.getItemListArray(key),
+  var itemListArray = this.getItemListArray(type),
       len = itemListArray.length,
       i, j;
   if (!len) return;
@@ -86,16 +87,16 @@ toDoStorage.setItem = function (key, name, options) {
       break;
     }
   }
-  localStorage.setItem(key, JSON.stringify(itemListArray))
+  localStorage.setItem(type, JSON.stringify(itemListArray))
 
 };
 
 /*
   * 删除某一项 folder 或者 task item 的方法
 */
-toDoStorage.removeItem = function (key, name) {
+toDoStorage.removeItem = function (type, name) {
   
-  var itemListArray = this.getItemListArray(key);
+  var itemListArray = this.getItemListArray(type);
   var len = itemListArray.length,
       i;
   if (!len) return;
@@ -105,7 +106,7 @@ toDoStorage.removeItem = function (key, name) {
     }
     break;
   }
-  localStorage.setItem(key, JSON.stringify(itemListArray))
+  localStorage.setItem(type, JSON.stringify(itemListArray))
   
 };
 
