@@ -46,13 +46,13 @@ var todoDOM = (function () {
     var lenOfTaskItems = items.length;
     // 当点击的区域属于某个任务 item
     if (e.target.className == 'task-item' || e.target.parentElement.className == 'task-item') {
-      
+
       var task_item_target = e.target.className == 'task-item' ? e.target : e.target.parentElement;
       //给每一个task item 绑定click事件，点击之后在右侧显示相应的任务信息
       var taskID = parseInt(task_item_target.getAttribute('data-task-id'));
       var task_obj = toDoStorage.getItem('task', 'taskID', taskID);
       paintInfoDisplayArea(task_obj);
-      
+
       for (j = 0; j < lenOfTaskItems; j++) {
         item_is_active = items[j].getAttribute('data-item-selected');
         //将当前的 item active 样式取消
@@ -186,32 +186,12 @@ var todoDOM = (function () {
   //-------------------   Begin DOM Method  ------------------------
 
   var task_type_area = document.querySelector('.task-type-area');
-  var active_underline = document.querySelector('.active-underline');
   var add_new_task_btn = document.querySelector('.todo-shell-task-add-btn');
   var todo_task_lists_area = document.querySelector('.todo-shell-task-lists');
   //任务分类All,todo,done
   task_type_area.addEventListener('click', function (e) {
-
-    var size = parseInt(getComputedStyle(this, null).getPropertyValue('width')) / 3;
-    var targetIndex = parseInt(e.target.getAttribute('data-index'));
-    var movingDistance = (targetIndex * size + 16) + 'px';
-    active_underline.style.left = movingDistance;
-    
-    //对应类型任务的切换
-    switch (targetIndex) {
-      case 0:
-        paintTaskNodeOfTypeColumn('all');
-        break;
-      case 1:
-        paintTaskNodeOfTypeColumn('todo');
-        break;
-      case 2:
-        paintTaskNodeOfTypeColumn('done');
-        break;
-      default:
-        return;
-    }
-
+    var type = e.target.getAttribute('data-type');
+    toggleTaskItemByType(type);
   }, false)
 
   todo_task_lists_area.addEventListener('click', function (e) { 
@@ -225,7 +205,28 @@ var todoDOM = (function () {
 
   add_new_task_btn.addEventListener('click', function () {
 
-    paintInfoEditArea();
+    //先判断当前是否处于编辑状态
+    if (document.querySelector('.edit-form-head-area')) {
+      var headArea = document.querySelector('.edit-form-head-area');
+      var nameInput = headArea.querySelector('#new-task-name').value;
+      //处于新添任务状态
+      if (!nameInput.length) {
+        alert('您当前已经处于新添任务的状态');
+        return;
+      }
+      //处于编辑任务状态
+      else {
+        paintInfoEditArea();
+      }
+
+    }
+    else { //当前处于任务展示状态，取得当前的任务对象用于点击‘取消’按钮时回退
+      var currentTaskName = document.querySelector('.info-task-name').innerText;
+      var task = toDoStorage.getItem('task', 'name', currentTaskName);
+      paintInfoEditArea(task);
+    }
+  
+
 
   }, false)
 

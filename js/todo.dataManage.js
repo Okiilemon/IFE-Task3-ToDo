@@ -66,19 +66,19 @@ toDoStorage.addItem = function (type, itemObj) {
   * 修改某一项某个属性的方法，因为value是一个数组对象，修改起来很不方便，需要封装成一个方法
   * 参数说明：
   * type: folder 或者 task 
-  * name: folder 或者 task 的名字
+  * idValue: folder 或者 task 的唯一标示符
   * options: 一个哈希列表
   { item: value } item是要修改的项，value是新的值
 */
-toDoStorage.setItem = function (type, name, options) {
-
+toDoStorage.setItem = function (type, idValue, options) {
+  var id = type === 'folder' ? 'name' : 'taskID';
   var itemListArray = this.getItemListArray(type),
       len = itemListArray.length,
       i, j;
   if (!len) return;
 
   for (i = 0; i < len; i++) {
-    if (itemListArray[i].name === name) {
+    if (itemListArray[i][id] === idValue) {
       for (j in options) {
         if (options.hasOwnProperty(j)) {
           itemListArray[i][j] = options[j];

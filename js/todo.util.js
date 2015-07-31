@@ -367,6 +367,52 @@ var newTaskInfoCheckandFormatted = function (taskID, name, ddl, parentFolderID, 
 };
 
 /*
+ * 切换到对应类型任务视图的方法
+ */
+var toggleTaskItemByType = function (type) {
+  var task_type_area = document.querySelector('.task-type-area');
+  var active_underline = document.querySelector('.active-underline');
+  var size = parseInt(getComputedStyle(task_type_area, null).getPropertyValue('width')) / 3;
+  var targetIndex;    
+  //对应类型任务的切换
+  switch (type) {
+    case 'all':
+      paintTaskNodeOfTypeColumn('all');
+      targetIndex = 0;
+      break;
+    case 'todo':
+      paintTaskNodeOfTypeColumn('todo');
+      targetIndex = 1;
+      break;
+    case 'done':
+      paintTaskNodeOfTypeColumn('done');
+      targetIndex = 2;
+      break;
+    default:
+      return;
+  }
+  var movingDistance = (targetIndex * size + 16) + 'px';
+  active_underline.style.left = movingDistance;
+}
+
+/*在时间分类栏中删除一个任务节点的方法*/
+
+var removeTaskItemInTimeColumn = function (task_obj) {
+  var ddl = task_obj.ddl_obj ? task_obj.ddl_obj : task_obj.ddl;
+  var timestamp = Date.parse(task_obj[ddl].toString());
+  var timeContainer = document.querySelector('.todo-shell-task-lists');
+  var timeBoxNode = timeContainer.querySelector('[data-timestamp="' + timestamp + '"]');
+  var currentTaskNodeInTime = timeBoxNode.querySelector('[data-task-id="' + task_obj.taskID + '"]');
+  var tasksInTimeNode = timeBoxNode.querySelectorAll('.task-item');
+  if (tasksInTimeNode.length > 1) {
+    timeBoxNode.removeChild(currentTaskNodeInTime);
+  }
+  else {
+    timeContainer.removeChild(timeBoxNode.parentElement);
+  }
+}
+
+/*
  * 渲染任务信息展示区域
  * @param
  * task_obj {obj} 一个task对象
@@ -418,8 +464,21 @@ var paintInfoDisplayArea = function (task_obj) {
     paintInfoEditArea(task);
   };
 
+  if (document.querySelector('.info-completed-btn')) {
+    var completedBtn = document.querySelector('.info-completed-btn');
+    completedBtn.addEventListener('click', function (e) {
+      e.target.innerHTML = '<i class="fa fa-check"></i>已完成';
+
+      toDoStorage.setItem('task', task_obj.taskID, { 'type': 'done' });
+
+      toggleTaskItemByType('done');
+    }, false);
+  }
+
 }
-//paintInfoDisplayArea(toDoStorage.getItemListArray('task')[0]);
+
+
+paintInfoDisplayArea(toDoStorage.getItemListArray('task')[0]);
 
 /*
  * 渲染任务信息编辑区域
@@ -498,18 +557,7 @@ var paintInfoEditArea = function (task_obj) {
         //再渲染更改后的节点（见else后）
       
         //改变时间栏中的视图
-        //先找到时间节点
-        var timestamp = Date.parse(task_obj.ddl_obj.toString());
-        var timeContainer = document.querySelector('.todo-shell-task-lists');
-        var timeBoxNode = timeContainer.querySelector('[data-timestamp="' + timestamp + '"]');
-        var currentTaskNodeInTime = timeBoxNode.querySelector('[data-task-id="' + task_obj.taskID + '"]');
-        var tasksInTimeNode = timeBoxNode.querySelectorAll('.task-item');
-        if (tasksInTimeNode.length > 1) {
-          timeBoxNode.removeChild(currentTaskNodeInTime);
-        }
-        else {
-          timeContainer.removeChild(timeBoxNode.parentElement);
-        }
+        toggleTaskItemByType(new_task_obj.type);
       } ());
 
     }
@@ -519,7 +567,7 @@ var paintInfoEditArea = function (task_obj) {
     }
     var toBeAddedFolder = document.querySelector('[data-folder-id=' + parentFolderID + ']');
     paintTaskNodeInFolder(name, toBeAddedFolder, new_task_obj.taskID);
-    paintTaskNodeOfTimeNode(new_task_obj.taskID, name, new_task_obj.ddl, new_task_obj.type);
+    toggleTaskItemByType(new_task_obj.type)
 
     paintInfoDisplayArea(new_task_obj);
 
