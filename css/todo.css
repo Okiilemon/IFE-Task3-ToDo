@@ -84,13 +84,14 @@ div[data-folder-selected='true'] {
 
 .folder-name-box,
 .time-title-box,
-.task-items-box .task-item { 
+.task-items-box .task-item,
+.time-box .task-item { 
   height: 29px;
   line-height: 29px;
   cursor: pointer;
 }
 
-.task-items-box .task-item { position: relative; }
+.task-items-box .task-item { position: relative }
 
 .folder-name-box {
   padding-left: 100px;
@@ -305,9 +306,11 @@ input:focus { outline: none; }
 .todo-shell-info { 
   width: 50%; 
   background-color: #fff;
+  overflow: hidden;
 }
 
 .todo-shell-info-area {
+  height: 100%;
   margin-top: 4px;
   margin-bottom: 20px;
 }
@@ -323,7 +326,7 @@ input:focus { outline: none; }
 }
 
 .display-head-area .info-affiliated-folder {
-  margin-right: 43px;
+  margin-right: 21px;
 }
 
 .info-task-ddl {
@@ -336,7 +339,7 @@ input:focus { outline: none; }
   float:right;
   width: 100px;
   margin-right: 12px;
-  padding: 5px;
+  padding: 2px;
   cursor: pointer;
   border-radius: 5px;
   border:1px solid;
@@ -414,7 +417,6 @@ select:focus { outline: none }
 }
 
 .edit-form-content-area textarea {
-  margin-left: -18px;
   margin-top: 20px;
   border: 1px solid #f2f2f2;
   font-size: 16px;
@@ -427,16 +429,21 @@ select:focus { outline: none }
 textarea:focus { outline: none }
 
 .edit-form-content-area {
+  position: absolute;
   text-align: center;
+  height: calc(100% - 160px);
+  overflow: scroll
 }
 
 .info-btn-wrapper {
-  position: relative;
+  margin-left: 50px;
+  width: 90%;  
+  position: absolute;
   left: 0;
-  bottom: 6px;
+  bottom: 32px;
 }
 
-.edit-form-content-area .info-btn {
+.todo-shell-info .info-btn {
   display: inline-block;
   width: 49%;
   text-align: center;

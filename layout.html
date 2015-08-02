@@ -3,7 +3,7 @@
     
     <head>
         <meta charset="UTF-8">
-        <title>HTML Layout</title>
+        <title>One Leaf</title>
         <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
         <link rel="stylesheet" href="css/todo.css" />
     </head>
@@ -11,22 +11,12 @@
     <body>
         <div id="todo">
             <div class="todo-shell-category column">
-                <div class="todo-shell-category-total">所有任务(
-                    <span id="task-total-num">0</span>)</div>
+                <div class="todo-shell-category-total">所有任务 (<span id="task-total-num">0</span>)</div>
                 <div class="todo-shell-category-lists">
-                    <div class="todo-shell-category-title folder-name-box" data-folder-selected="false" data-tree-level="-1">
+                    <div class="todo-shell-category-title folder-name-box" data-folder-selected="true" data-tree-level="-1">
                         <span class="folder-name">分类列表</span>
                     </div>
-                    <ul class="todo-shell-category-folders" data-folder-id="root-folder">
-                        <li class="task-folder">
-                            <div class="folder-name-box" data-folder-selected="true" data-tree-level="0">
-                                <i class="fa fa-folder"></i>
-                                <i class="fa fa-folder-open-o"></i>
-                                <span class="folder-name">默认分类</span>(
-                                <span class="task-num">0</span>)</div>
-                            <ul class="task-items-box" data-is-opened="false" data-folder-id="default-folder"></ul>
-                        </li>
-                    </ul>
+                    <ul class="todo-shell-category-folders" data-folder-id="root-folder"></ul>
                 </div>
                 <div class="todo-shell-category-add-btn">
                     <i class="fa fa-plus"></i>

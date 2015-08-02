@@ -1,5 +1,5 @@
 var todoDOM = (function () {
-
+  
   //===================    Begin Category Module  ===================  
   
   //----------   Begin Module Scope Variables  ------------
@@ -67,21 +67,10 @@ var todoDOM = (function () {
       return;
     }
     else if (e.target.className == 'fa fa-close') {
-      var container = e.target.parentElement.parentElement.parentElement;
       var folder_name_box = e.target.parentElement;
       var target = folder_name_box.parentElement;
-      var currentFolderName = folder_name_box.querySelector('.folder-name').innerHTML;
-      var childrenFolder = folder_name_box.nextElementSibling.querySelectorAll('.task-folder');
-      if (childrenFolder) {
-        var lenOfChildernFolder = childrenFolder.length,
-          i;
-        for (i = 0; i < lenOfChildernFolder; i++) {
-          var nameOfChildrenFolder = childrenFolder[i].querySelector('.folder-name').innerHTML;
-          toDoStorage.removeItem(nameOfChildrenFolder);
-        }
-      }
-      toDoStorage.removeItem('folder', currentFolderName);
-      container.removeChild(target);
+      
+      removeFolder(target);
     }
     // 当点击的区域属于某个任务文件夹 folder-name-box
     else {
@@ -131,6 +120,7 @@ var todoDOM = (function () {
    * 所以这里封装成一个方法方便调用
  */
   var addNewFolder = function () {
+    var folderID = toDoStorage.getItemListArray('folder').length + 1;
     var new_folder_name = new_folder_name_input.value;
     //新节点要插入的容器
     var toBeAddedBox = selected_folder.nextElementSibling;
@@ -142,9 +132,10 @@ var todoDOM = (function () {
     var newNodeLevel = parentNodeLevel + 1;
       
     //渲染节点
-    paintFolderNode(new_folder_name, toBeAddedBox, newNodeLevel);
+    paintFolderNode(folderID, new_folder_name, toBeAddedBox, newNodeLevel);
     //将数据存入localStorage
     var newFolderItem = {
+      folderID: folderID,
       name: new_folder_name,
       parentFolderID: parentFolderID,
       level: newNodeLevel
@@ -152,6 +143,17 @@ var todoDOM = (function () {
     toDoStorage.addItem('folder', newFolderItem);
     add_folder_form.style.display = 'none';
     new_folder_name_input.value = '';
+    
+    //判断一下当前是否处于编辑任务状态,如果是将当前新添加的分类加到下拉列表中
+    if (document.querySelector('.edit-form-head-area')) { 
+      var new_folder_option = document.createElement('option');
+      var select = document.getElementsByTagName('select')[0];
+      new_folder_option.setAttribute('data-folder-id', folderID);
+      new_folder_option.innerHTML = new_folder_name;
+      select.insertBefore(new_folder_option, select.firstChild);
+      select.value = new_folder_name;
+      
+    }
   }
 
   new_folder_name_input.addEventListener('keydown', function (e) {
@@ -216,21 +218,16 @@ var todoDOM = (function () {
       }
       //处于编辑任务状态
       else {
-        paintInfoEditArea();
+        paintInfoEditArea(false);
       }
 
     }
     else { //当前处于任务展示状态，取得当前的任务对象用于点击‘取消’按钮时回退
-      var currentTaskName = document.querySelector('.info-task-name').innerText;
-      var task = toDoStorage.getItem('task', 'name', currentTaskName);
-      paintInfoEditArea(task);
+      var currentTaskID = parseInt(document.querySelector('.info-task-name').getAttribute('data-task-id'));
+      var task = toDoStorage.getItem('task', 'taskID', currentTaskID);
+      paintInfoEditArea(false, task);
     }
-  
-
 
   }, false)
-
-
-
 
 })();

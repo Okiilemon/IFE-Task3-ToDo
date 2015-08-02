@@ -12,7 +12,7 @@
       addItem()
       setItem()
       removeItem()
-    }�有有  说说才
+    }
 */
 var toDoStorage = {};
 
@@ -92,19 +92,23 @@ toDoStorage.setItem = function (type, idValue, options) {
 };
 
 /*
-  * 删除某一项 folder 或者 task item 的方法
+  * 根据条件 key === value 删除某一项 folder 或者 task 符合条件的item 的方法
+  * @param:
+  * type: {string} 'folder' 或 'task'
+  * key: 属性名
+  * value: 值
 */
-toDoStorage.removeItem = function (type, name) {
+toDoStorage.removeItem = function (type, key, value) {
   
   var itemListArray = this.getItemListArray(type);
   var len = itemListArray.length,
       i;
   if (!len) return;
   for (i = 0; i < len; i++) {
-    if (itemListArray[i]['name'] === name) {
+    if (itemListArray[i][key] === value) {
       itemListArray.splice(i, 1);
+      break;      
     }
-    break;
   }
   localStorage.setItem(type, JSON.stringify(itemListArray))
   

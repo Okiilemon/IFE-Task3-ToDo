@@ -1,3 +1,34 @@
+var toDoInit = (function () { 
+  //用户第一次载入此页面时将默认分类存入localStorage中
+  if (!toDoStorage.getItemListArray('folder').length) {
+    var default_folder_obj = {
+      folderID: 1,
+      name: '默认分类',
+      parentFolderID: 'root-folder',
+      level: 0
+    };
+    toDoStorage.addItem('folder', default_folder_obj);
+
+    var now = new Date();
+    //向默认分类中添加一个默认的任务
+    var default_task_obj = {
+      taskID: 1,
+      name: '使用说明',
+      parentFolderID: 1,
+      ddl: now,
+      info: '欢迎使用 One Leaf 个人任务管理 Web 应用 ~ <br>'
+      + '<br><p><i class="fa fa-leaf"></i> 代表你创建的任务 </p>'
+      + '<p><i class="fa fa-calendar-o"></i> 代表任务完成的截止日期 </p>'
+      + '<p><i class="fa fa-folder"></i> 代表任务所属的分类</p><br>'
+      + '<p>在添加分类时，支持嵌套分类，如果想在一级分类中创建分类，点击[分类列表]即可；或者想要在某一分类下创建子级分类，则需要先点击您想添加到的分类文件夹（父分类），否则会默认添加到当前处于被选中状态的分类文件夹。</p>'
+      + '<p>在添加任务时，如果设定的截止日前在今天以前那么默认为[已完成]状态，否则默认为[未完成]状态;<p>'
+      + '<p>无论任务当前处于何种状态，您都可以对其进行编辑。</p><br>'
+      + '<p>Tips：如果您使用的是Chrome浏览器，在添加分类时请勿按Enter键来添加，请点击右侧的"+"号</p>'
+    }
+    toDoStorage.addItem('task', default_task_obj);
+  }
+
+})()
 
 //每个item或者task的高度
 var height_per_item = 29;
@@ -56,12 +87,13 @@ var changeHeightOfItemsBox = function (changeType, newNode) {
 /*
  * 渲染单个分类列表节点方法
  * @param:
+ * folderID: {number} 分类列表的唯一标示符
  * name:{string} 新写入的这个分类列表的名字
  * parentFolderID: {string} 上一级分类文件夹的唯一标示符（文件夹的名字）
  * level: {number} 这个分类列表在嵌套列表树中所处的层级     
  * 
 */
-var paintFolderNode = function (name, parentFolder, level) {
+var paintFolderNode = function (folderID, name, parentFolder, level) {
 
   //创建待添加的新分类节点
   var toBeAddedFolder = document.createElement('li');
@@ -72,10 +104,10 @@ var paintFolderNode = function (name, parentFolder, level) {
     + '<i class="fa fa-folder"></i>'
     + '<i class="fa fa-folder-open-o"></i>'
     + '<span class="folder-name">' + name + '</span>'
-    + '  (<span class="task-num"></span>)'
+    + '  (<span class="task-num"> 0 </span>)'
     + '<i class="fa fa-close"></i>'
     + '</div>'
-    + '<ul class="task-items-box" data-is-opened="false" data-folder-id=' + name + '></ul>';
+    + '<ul class="task-items-box" data-is-opened="false" data-folder-id="' + folderID + '"></ul>';
   //插入DOM
   toBeAddedFolder.innerHTML = folder_tmpl;
   parentFolder.appendChild(toBeAddedFolder);
@@ -89,8 +121,14 @@ var paintFolderNode = function (name, parentFolder, level) {
  * @param:
  * name: {string} 任务名称
  * parentFolder: {obj node} 父分类文件夹节点
+ * taskTotlaNumNode: {obj node} 任务总数节点
 */
-var paintTaskNodeInFolder = function (name, parentFolder, taskID) { 
+var paintTaskNodeInFolder = function (name, parentFolder, taskID, taskTotlaNumNode) {
+
+  var totalTaskNumBox = taskTotlaNumNode ? taskTotlaNumNode : document.querySelector('#task-total-num');
+  var numOfTotalTasks = parseInt(totalTaskNumBox.innerHTML);
+  var parentFolderNumBox = parentFolder.previousElementSibling.querySelector('.task-num');
+  var numOfThisTasks = parseInt(parentFolderNumBox.innerHTML);
   
   //创建待添加的任务节点
   var toBeAddedTask = document.createElement('li');
@@ -101,6 +139,8 @@ var paintTaskNodeInFolder = function (name, parentFolder, taskID) {
   //将该任务节点插入父分类文件夹
   parentFolder.appendChild(toBeAddedTask);
   changeHeightOfItemsBox(true, toBeAddedTask);
+  parentFolderNumBox.innerHTML = (numOfThisTasks + 1).toString();
+  totalTaskNumBox.innerHTML = (numOfTotalTasks + 1).toString();
 
 }
 
@@ -133,11 +173,11 @@ var paintNestedFolderList = (function () {
       var lenOfFoldersOfThisLevel = folderTree[j].length;
       //依次渲染这一层的每一个节点
       for (k = 0; k < lenOfFoldersOfThisLevel; k++) {
-        var parentFolder = document.querySelector('[data-folder-id=' + folderTree[j][k].parentFolderID + ']');
+        var parentFolder = document.querySelector('[data-folder-id="' + folderTree[j][k].parentFolderID + '"]');
         var name = folderTree[j][k].name;
-        var num = folderTree[j][k].num;
         var level = folderTree[j][k].level;
-        paintFolderNode(name, parentFolder, num, level);
+        var folderID = folderTree[j][k].folderID;
+        paintFolderNode(folderID, name, parentFolder, level);
       }
     }
   }
@@ -148,14 +188,15 @@ var paintNestedFolderList = (function () {
  * 在分类列表树中渲染任务节点的方法
 */
 var paintTaskNodeOfFolderTree = (function () {
+  var totalNumNode = document.querySelector('#task-total-num');
   var taskListArray = toDoStorage.getItemListArray('task');
   var lenOfTasks = taskListArray.length,
     i;
   if (!lenOfTasks) return;
   for (i = 0; i < lenOfTasks; i++) {
-    var parentFolder = document.querySelector('[data-folder-id=' + taskListArray[i].parentFolderID + ']');
+    var parentFolder = document.querySelector('[data-folder-id="' + taskListArray[i].parentFolderID + '"]');
     var name = taskListArray[i].name;
-    paintTaskNodeInFolder(name, parentFolder, taskListArray[i].taskID);
+    paintTaskNodeInFolder(name, parentFolder, taskListArray[i].taskID, totalNumNode);
   }
 })();
 
@@ -395,23 +436,6 @@ var toggleTaskItemByType = function (type) {
   active_underline.style.left = movingDistance;
 }
 
-/*在时间分类栏中删除一个任务节点的方法*/
-
-var removeTaskItemInTimeColumn = function (task_obj) {
-  var ddl = task_obj.ddl_obj ? task_obj.ddl_obj : task_obj.ddl;
-  var timestamp = Date.parse(task_obj[ddl].toString());
-  var timeContainer = document.querySelector('.todo-shell-task-lists');
-  var timeBoxNode = timeContainer.querySelector('[data-timestamp="' + timestamp + '"]');
-  var currentTaskNodeInTime = timeBoxNode.querySelector('[data-task-id="' + task_obj.taskID + '"]');
-  var tasksInTimeNode = timeBoxNode.querySelectorAll('.task-item');
-  if (tasksInTimeNode.length > 1) {
-    timeBoxNode.removeChild(currentTaskNodeInTime);
-  }
-  else {
-    timeContainer.removeChild(timeBoxNode.parentElement);
-  }
-}
-
 /*
  * 渲染任务信息展示区域
  * @param
@@ -426,12 +450,13 @@ var paintInfoDisplayArea = function (task_obj) {
   month = month < 10 ? '0' + month : month;
   var day = date_obj.getDate() < 10 ? '0' + date_obj.getDate() : date_obj.getDate();
   var time_title_tmpl = year + '-' + month + '-' + day;
+  var folderName = toDoStorage.getItem('folder', 'folderID', task_obj.parentFolderID).name;
   var info_head_tmpl =
     '<div class="display-head-area info-head-area">'
-    + '<div class="info-task-name" title="任务名称"><i class="fa fa-leaf"></i>'
+    + '<div class="info-task-name" title="任务名称" data-task-id="' + task_obj.taskID +'"><i class="fa fa-leaf"></i>'
     + '<span class="task-name">' + task_obj.name + '</span></div>'
     + '<div class="info-affiliated-folder" title="所属分类"><i class="fa fa-folder"></i>'
-    + '<span class="affiliated-folder-name">' + task_obj.parentFolderID + '</span></div>'
+    + '<span class="affiliated-folder-name">' + folderName + '</span></div>'
     + '<div class="info-task-ddl" title="预计完成时间"><i class="fa fa-calendar-o"></i>'
     + '<span class="task-ddl">' + time_title_tmpl + '</span></div>';
 
@@ -461,7 +486,7 @@ var paintInfoDisplayArea = function (task_obj) {
       info: task_obj.info,
       ddl_obj: task_obj.ddl
     };
-    paintInfoEditArea(task);
+    paintInfoEditArea(true, task);
   };
 
   if (document.querySelector('.info-completed-btn')) {
@@ -476,23 +501,22 @@ var paintInfoDisplayArea = function (task_obj) {
   }
 
 }
-
-
 paintInfoDisplayArea(toDoStorage.getItemListArray('task')[0]);
 
 /*
  * 渲染任务信息编辑区域
  * @param
- * task_obj {object} [optional] 
+ * ifIsEdit {bool}  true:当前是编辑状态 false:当前是新添加状态
+ * task_obj {object} [optional]
  */
-var paintInfoEditArea = function (task_obj) {
+var paintInfoEditArea = function (ifIsEdit, task_obj) {
   var info_container = document.querySelector('.todo-shell-info-area');
   var folder_lists = toDoStorage.getItemListArray('folder');
   var lenOfFolders = folder_lists.length, i;
   var option_tmpl = '';
 
   for (i = 0; i < lenOfFolders; i++) {
-    option_tmpl += '<option>' + folder_lists[i].name + '</option>';
+    option_tmpl += '<option data-folder-id=' + folder_lists[i].folderID + '>' + folder_lists[i].name + '</option>';
   }
 
   var edit_tmpl =
@@ -504,12 +528,12 @@ var paintInfoEditArea = function (task_obj) {
     + '<div class="info-task-ddl"><i class="fa fa-calendar-o"></i><label for="new-task-ddl">截止日期</label>'
     + '<input type="text" id="new-task-ddl" placeholder="日期格式：yyyy-mm-dd"></div>'
     + '<div class="input-error-prompt">! 日期格式有误，请正确输入</div></div>'
-    + '<div class="edit-form-content-area"><textarea name="task-info" id="task-info-input" cols="60" rows="25" placeholder="任务描述信息..."></textarea>'
+    + '<div class="edit-form-content-area"><textarea name="task-info" id="task-info-input" cols="60" rows="25" placeholder="任务描述信息..."></textarea></div>'
     + '<div class="info-btn-wrapper">'
     + '<div class="ok info-btn ">'
     + '<i class="fa fa-plus"></i>确认添加</div>'
     + '<div class="cancel info-btn">'
-    + '<i class="fa fa-close"></i>取消</div></div></div>';
+    + '<i class="fa fa-close"></i>取消</div></div>';
   info_container.innerHTML = edit_tmpl;
   
   //编辑任务表单元素
@@ -521,20 +545,26 @@ var paintInfoEditArea = function (task_obj) {
   var cancel_task_info_btn = document.querySelector('.cancel');
 
   //如果是true 那么渲染‘确认更改’若不是‘确认添加按钮’,这里为了区分是‘添加任务’还是‘编辑任务’中的回调
-  if (task_obj) {
+  if (ifIsEdit) {
     submit_task_info_btn.innerText = '确认更改';
-
+    var parentFolderName = toDoStorage.getItem('folder', 'folderID', task_obj.parentFolderID).name;
     edit_task_name_input.value = task_obj.name;
-    edit_affiliated_folder_select.value = task_obj.parentFolderID;
+    edit_affiliated_folder_select.value = parentFolderName;
     edit_task_ddl_input.value = task_obj.ddl;
     edit_task_info_textarea.value = task_obj.info;
   }
 
   submit_task_info_btn.addEventListener('click', function () {
     //首先取得此时输入框中用户填入或更改的数据
-    var taskID = task_obj ? task_obj.taskID : toDoStorage.getItemListArray('task').length + 1;
+    var taskID;
+    if (ifIsEdit && task_obj) {
+      taskID = task_obj.taskID;
+    }
+    else { 
+      taskID = toDoStorage.getItemListArray('task').length + 1;
+    }
     var name = edit_task_name_input.value;
-    var parentFolderID = edit_affiliated_folder_select.value;
+    var parentFolderID = parseInt(edit_affiliated_folder_select[edit_affiliated_folder_select.selectedIndex].getAttribute('data-folder-id'));
     var ddl = edit_task_ddl_input.value;
     var info = edit_task_info_textarea.value;
 
@@ -542,7 +572,7 @@ var paintInfoEditArea = function (task_obj) {
 
     if (!new_task_obj) return;
 
-    if (task_obj) {//响应‘确认更改’的操作
+    if (ifIsEdit && task_obj) {//响应‘确认更改’的操作
       
       //创建一个作用域
       (function () {
@@ -552,7 +582,7 @@ var paintInfoEditArea = function (task_obj) {
         //先删除原来的节点
         var foldersContainer = document.querySelector('.todo-shell-category-lists');
         var currentTaskNode = foldersContainer.querySelector('[data-task-id="' + task_obj.taskID + '"]');
-        var currentParentFolder = document.querySelector('[data-folder-id=' + task_obj.parentFolderID + ']');
+        var currentParentFolder = document.querySelector('[data-folder-id="' + task_obj.parentFolderID + '"]');
         currentParentFolder.removeChild(currentTaskNode);
         //再渲染更改后的节点（见else后）
       
@@ -561,13 +591,13 @@ var paintInfoEditArea = function (task_obj) {
       } ());
 
     }
-    else { //相应‘确认添加’的操作
+    else { //响应‘确认添加’的操作
       //将用户输入的数据取出并存入localStorage
       toDoStorage.addItem('task', new_task_obj);
     }
-    var toBeAddedFolder = document.querySelector('[data-folder-id=' + parentFolderID + ']');
+    var toBeAddedFolder = document.querySelector('[data-folder-id="' + parentFolderID + '"]');
     paintTaskNodeInFolder(name, toBeAddedFolder, new_task_obj.taskID);
-    toggleTaskItemByType(new_task_obj.type)
+    toggleTaskItemByType(new_task_obj.type);
 
     paintInfoDisplayArea(new_task_obj);
 
@@ -577,5 +607,47 @@ var paintInfoEditArea = function (task_obj) {
     paintInfoDisplayArea(task_obj);
   }, false)
 }
+
+// ------- 嵌套列表中删除操作与动态增加任务数的操作由于受到嵌套的影响，所以比较复杂，单独写一个方法 -----
+
+/*
+ * 删除某个分类文件夹的方法
+ * @param
+ * removeFolderItem: {obj node} 要删除的分类文件夹节点
+ */
+var removeFolder = function (removeFolderItem) {
+
+  var folderContainer = removeFolderItem.parentElement;
+  var childrenContainer = removeFolderItem.lasttElementChild;
+  var childrenFolders = childrenContainer.querySelectorAll('.folder-name-box');
+  var childrenTasks = childrenContainer.querySelectorAll('.task-item');
+  var currentFolderID = parseInt(childrenContainer.getAttribute('data-folder-id'));
+
+  //删除子分类或任务的方法
+  var removeChildren = function (children, type, idKey) {
+    var len = children.length, i;
+    for (i = 0; i < len; i++) {
+      //如果此时是删除子分类，切该子分类下面还有子分类，那么递归
+      if (type === 'folder' && children[i].nextElementSibling.querySelectorAll('.folder-name-box')) {
+        removeFolder(children[i].parentElement);
+      }
+      var id = parseInt(children[i].getAttribute('data-' + type + '-id'));
+      toDoStorage.removeItem(type, idKey, id);
+    }
+  }
+  
+  //删除子分类
+  if (childrenFolders) {
+    removeChildren(childrenFolders, 'folder', 'folderID');
+  }
+  //删除子任务
+  if (childrenTasks) {
+    removeChildren(childrenFolders, 'task', 'taskID');
+  }
+  toDoStorage.removeItem('folder', 'folderID', currentFolderID);
+  folderContainer.removeChild(removeFolderItem);
+}
+ 
+ 
 
 
