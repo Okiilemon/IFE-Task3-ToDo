@@ -38,7 +38,8 @@ body {
 
 .column {
   float: left;
-  overflow: scroll;
+  overflow-y: auto;
+  overflow-x: auto;
   position: relative;
   float: left;
   padding: 30px 15px 15px 30px;
@@ -417,7 +418,6 @@ input:focus { outline: none; }
   border: none;
   margin-top: 2px;
   margin-left: 4px;
-   -webkit-appearance: none; 
 }
 
 select:focus { outline: none } 

@@ -21,7 +21,7 @@ var toDoInit = (function () {
       + '<p><i class="fa fa-calendar-o"></i> 代表任务完成的截止日期 </p>'
       + '<p><i class="fa fa-folder"></i> 代表任务所属的分类</p><br>'
       + '<p>● 在添加分类时，支持嵌套分类，如果想在一级分类中创建分类，点击[分类列表]即可；或者想要在某一分类下创建子级分类，则需要先点击您想添加到的分类文件夹（父分类），否则会默认添加到当前处于被选中状态的分类文件夹。</p><br>'
-      + '<p>● 在添加任务时，如果设定的截止日前在今天以前那么默认为[已完成]状态，否则默认为[未完成]状态;<p><br>'
+      + '<p>● 在添加任务时，如果设定的截止日前在今天以前那么默认为[已完成]状态，否则默认为[未完成]状态;所属分类那里是一个下拉选项框，点击后选择您想要添加到的分类文件夹即可。<p><br>'
       + '<p>● 无论任务当前处于何种状态，您都可以对其进行编辑。</p><br>'
     }
     toDoStorage.addItem('task', default_task_obj);
@@ -576,6 +576,10 @@ var paintInfoEditArea = function (ifIsEdit, task_obj) {
     edit_task_ddl_input.value = task_obj.ddl;
     edit_task_info_textarea.value = task_obj.info;
   }
+  else {//这里是让所属分类的下拉框默认选中当前选中的分类
+    var selected_folder_name = document.querySelector('[data-folder-selected="true"]').querySelector('.folder-name').innerHTML;
+    edit_affiliated_folder_select.value = selected_folder_name;
+  }
 
   //给'确认按钮'绑定事件，这里要判断一下是'确认添加'还是'确认更改'
   submit_task_info_btn.addEventListener('click', function () {
@@ -624,7 +628,7 @@ var paintInfoEditArea = function (ifIsEdit, task_obj) {
     var toBeAddedFolder = document.querySelector('[data-folder-id="' + parentFolderID + '"]');
     paintTaskNodeInFolder(name, toBeAddedFolder, new_task_obj.taskID);
     toggleTaskItemByType(new_task_obj.type);
-
+    
     paintInfoDisplayArea(new_task_obj);
 
   }, false)
