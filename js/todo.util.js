@@ -451,7 +451,7 @@ var toggleTaskItemByType = function (type) {
     default:
       return;
   }
-  var movingDistance = (targetIndex * size + 16) + 'px';
+  var movingDistance = (targetIndex * size + 20) + 'px';
   active_underline.style.left = movingDistance;
 }
 
@@ -669,13 +669,17 @@ var removeFolder = function (removeFolderItem) {
     if (childrenTasks) {
       var lenOfChildrenTasks = childrenTasks.length,
         j;
-      for (i = 0; i < lenOfChildrenTasks; i++) {
-        var thisTaskID = parseInt(childrenFolders[i].getAttribute('data-folder-id'));
+      for (j = 0; j < lenOfChildrenTasks; j++) {
+        var thisTaskID = parseInt(childrenTasks[j].getAttribute('data-folder-id'));
         toDoStorage.removeItem('folder', 'folderID', thisTaskID);
       }
     }
     //删除当前分类节点
     toDoStorage.removeItem('folder', 'folderID', currentFolderID);
+    //总任务数相应减少此分类下的任务数
+    var thisFolderTasksNum = parseInt(childrenContainer.previousElementSibling.querySelector('.task-num').innerHTML);
+    thisFolderTasksNum = (-1) * thisFolderTasksNum;
+    changeTheNumOfTask(removeFolderItem, thisFolderTasksNum);
     folderContainer.removeChild(removeFolderItem);
   }
 }
