@@ -150,6 +150,7 @@ li[data-item-selected='true'] .fa-caret-right {
   text-align: center;
   cursor: pointer;
   box-sizing: border-box;
+  border: 1px solid transparent;
 }
 
 .todo-shell-category-add-btn:hover,
@@ -277,6 +278,21 @@ input:focus { outline: none; }
   color: #59E9EE
 }
 
+.time-box .task-item {
+  position: relative;
+}
+
+.time-box .task-item:hover .remove-task-btn {
+  display: inline;
+}
+
+.remove-task-btn {
+  display: none;
+  position: absolute;
+  right: 30px;
+  top: 5px;
+}
+
 .task-item .fa-check { 
   color: #59E9EE;
   margin-left: 5px; 
@@ -343,6 +359,7 @@ input:focus { outline: none; }
   cursor: pointer;
   border-radius: 5px;
   border:1px solid;
+  text-align: center
 }
 
 .info-completed-btn:hover { background-color: rgba(27, 133, 136, 0.1) }
@@ -356,7 +373,8 @@ input:focus { outline: none; }
   bottom: 30px;
   padding: 5px;
   box-sizing: border-box;
-  cursor: pointer
+  cursor: pointer;
+  border: 1px solid transparent;
 }
 
 .edit-btn:hover {
@@ -462,6 +480,8 @@ textarea:focus { outline: none }
 #info-edit-area { display: none }
 
 .display-content-area {
+  color: #333;
+  font-size: 13px;
   margin-top: 30px;
   padding-right: 20px;
 }

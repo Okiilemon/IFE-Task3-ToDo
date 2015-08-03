@@ -20,10 +20,9 @@ var toDoInit = (function () {
       + '<br><p><i class="fa fa-leaf"></i> 代表你创建的任务 </p>'
       + '<p><i class="fa fa-calendar-o"></i> 代表任务完成的截止日期 </p>'
       + '<p><i class="fa fa-folder"></i> 代表任务所属的分类</p><br>'
-      + '<p>在添加分类时，支持嵌套分类，如果想在一级分类中创建分类，点击[分类列表]即可；或者想要在某一分类下创建子级分类，则需要先点击您想添加到的分类文件夹（父分类），否则会默认添加到当前处于被选中状态的分类文件夹。</p>'
-      + '<p>在添加任务时，如果设定的截止日前在今天以前那么默认为[已完成]状态，否则默认为[未完成]状态;<p>'
-      + '<p>无论任务当前处于何种状态，您都可以对其进行编辑。</p><br>'
-      + '<p>Tips：如果您使用的是Chrome浏览器，在添加分类时请勿按Enter键来添加，请点击右侧的"+"号</p>'
+      + '<p>·在添加分类时，支持嵌套分类，如果想在一级分类中创建分类，点击[分类列表]即可；或者想要在某一分类下创建子级分类，则需要先点击您想添加到的分类文件夹（父分类），否则会默认添加到当前处于被选中状态的分类文件夹。</p>'
+      + '<p>·在添加任务时，如果设定的截止日前在今天以前那么默认为[已完成]状态，否则默认为[未完成]状态;<p>'
+      + '<p>·无论任务当前处于何种状态，您都可以对其进行编辑。</p><br>'
     }
     toDoStorage.addItem('task', default_task_obj);
   }
@@ -97,7 +96,6 @@ var paintFolderNode = function (folderID, name, parentFolder, level) {
 
   //创建待添加的新分类节点
   var toBeAddedFolder = document.createElement('li');
-  //toBeAddedFolder.setAttribute('data-has-child','false');
   toBeAddedFolder.className = 'task-folder';
   var folder_tmpl =
     '<div class="folder-name-box" data-folder-selected="false" data-tree-level="' + level + '">'
@@ -113,22 +111,43 @@ var paintFolderNode = function (folderID, name, parentFolder, level) {
   parentFolder.appendChild(toBeAddedFolder);
 
   changeHeightOfItemsBox(true, toBeAddedFolder);
+  return toBeAddedFolder;
+}
 
+/*
+ * 动态改变一个分类中子任务数视图的方法,再添加或者删除一个任务时都会用到该方法
+ * @param
+ * targetTask: {obj node} 被添加的或被删除的任务节点
+ * type: {num} -1 数量减一， 1 数量加一, 或任意正整数负整数
+ * totalNumNode: {obj node} [option]总任务数节点
+*/
+var changeTheNumOfTask = function (targetTask, type, totalNumNode) {
+
+  var totalNumBox = totalNumNode ? totalNumNode : document.querySelector('#task-total-num');
+
+  //遍历所有的分类节点，如果包含当前新添加的任务，那么任务数就改变
+  var numOfTotalTasks = parseInt(totalNumBox.innerHTML);
+  var allFolderNodes = document.querySelectorAll('.task-items-box');
+  var lenOfFolders = allFolderNodes.length,
+    i;
+  for (i = 0; i < lenOfFolders; i++) {
+    if (allFolderNodes[i].contains(targetTask)) {
+      var thisNumBox = allFolderNodes[i].previousElementSibling.querySelector('.task-num');
+      var numOfThisTasks = parseInt(thisNumBox.innerHTML);
+      thisNumBox.innerHTML = (numOfThisTasks + type).toString();
+    }
+  }
+  totalNumBox.innerHTML = (numOfTotalTasks + type).toString();
 }
 
 /* 
- * 渲染任务节点的方法
+ * 在分类文件夹下渲染任务节点的方法
  * @param:
  * name: {string} 任务名称
  * parentFolder: {obj node} 父分类文件夹节点
  * taskTotlaNumNode: {obj node} 任务总数节点
 */
-var paintTaskNodeInFolder = function (name, parentFolder, taskID, taskTotlaNumNode) {
-
-  var totalTaskNumBox = taskTotlaNumNode ? taskTotlaNumNode : document.querySelector('#task-total-num');
-  var numOfTotalTasks = parseInt(totalTaskNumBox.innerHTML);
-  var parentFolderNumBox = parentFolder.previousElementSibling.querySelector('.task-num');
-  var numOfThisTasks = parseInt(parentFolderNumBox.innerHTML);
+var paintTaskNodeInFolder = function (name, parentFolder, taskID) {
   
   //创建待添加的任务节点
   var toBeAddedTask = document.createElement('li');
@@ -139,9 +158,8 @@ var paintTaskNodeInFolder = function (name, parentFolder, taskID, taskTotlaNumNo
   //将该任务节点插入父分类文件夹
   parentFolder.appendChild(toBeAddedTask);
   changeHeightOfItemsBox(true, toBeAddedTask);
-  parentFolderNumBox.innerHTML = (numOfThisTasks + 1).toString();
-  totalTaskNumBox.innerHTML = (numOfTotalTasks + 1).toString();
 
+  changeTheNumOfTask(toBeAddedTask, 1);
 }
 
 /*
@@ -268,6 +286,7 @@ var paintTaskNodeOfTimeNode = function (taskID, name, ddl_string, type, parentTi
   if (type === 'done') {
     task_item_tmpl += '<i class="fa fa-check"></i>';
   }
+  task_item_tmpl += '<i class="fa fa-close remove-task-btn"></i>';
   task_item.innerHTML = task_item_tmpl;
   parentTimeNode.appendChild(task_item);
 }
@@ -453,7 +472,7 @@ var paintInfoDisplayArea = function (task_obj) {
   var folderName = toDoStorage.getItem('folder', 'folderID', task_obj.parentFolderID).name;
   var info_head_tmpl =
     '<div class="display-head-area info-head-area">'
-    + '<div class="info-task-name" title="任务名称" data-task-id="' + task_obj.taskID +'"><i class="fa fa-leaf"></i>'
+    + '<div class="info-task-name" title="任务名称" data-task-id="' + task_obj.taskID + '"><i class="fa fa-leaf"></i>'
     + '<span class="task-name">' + task_obj.name + '</span></div>'
     + '<div class="info-affiliated-folder" title="所属分类"><i class="fa fa-folder"></i>'
     + '<span class="affiliated-folder-name">' + folderName + '</span></div>'
@@ -478,6 +497,10 @@ var paintInfoDisplayArea = function (task_obj) {
   var task_edit_btn = document.querySelector('.edit-btn');
 
   task_edit_btn.onclick = function () {
+    if (task_obj.taskID === 1) { 
+      alert('抱歉，使用说明不能编辑');
+      return;
+    }
     var task = {
       taskID: task_obj.taskID,
       name: task_obj.name,
@@ -554,13 +577,16 @@ var paintInfoEditArea = function (ifIsEdit, task_obj) {
     edit_task_info_textarea.value = task_obj.info;
   }
 
+  //给'确认按钮'绑定事件，这里要判断一下是'确认添加'还是'确认更改'
   submit_task_info_btn.addEventListener('click', function () {
     //首先取得此时输入框中用户填入或更改的数据
     var taskID;
+    //如果此时是'更改'的操作，取到当前更改的任务ID
     if (ifIsEdit && task_obj) {
       taskID = task_obj.taskID;
     }
-    else { 
+    //如果此时是'添加'的操作，那么就生成一个新的ID
+    else {
       taskID = toDoStorage.getItemListArray('task').length + 1;
     }
     var name = edit_task_name_input.value;
@@ -618,34 +644,40 @@ var paintInfoEditArea = function (ifIsEdit, task_obj) {
 var removeFolder = function (removeFolderItem) {
 
   var folderContainer = removeFolderItem.parentElement;
-  var childrenContainer = removeFolderItem.lasttElementChild;
-  var childrenFolders = childrenContainer.querySelectorAll('.folder-name-box');
-  var childrenTasks = childrenContainer.querySelectorAll('.task-item');
+  var childrenContainer = removeFolderItem.lastElementChild;
   var currentFolderID = parseInt(childrenContainer.getAttribute('data-folder-id'));
-
-  //删除子分类或任务的方法
-  var removeChildren = function (children, type, idKey) {
-    var len = children.length, i;
-    for (i = 0; i < len; i++) {
-      //如果此时是删除子分类，切该子分类下面还有子分类，那么递归
-      if (type === 'folder' && children[i].nextElementSibling.querySelectorAll('.folder-name-box')) {
-        removeFolder(children[i].parentElement);
-      }
-      var id = parseInt(children[i].getAttribute('data-' + type + '-id'));
-      toDoStorage.removeItem(type, idKey, id);
-    }
+  if (currentFolderID === 1) {
+    alert('抱歉，默认分类不能删除');
+    return;
   }
+  var ifConfirm = confirm('此分类删除后，它的所有子分类以及子任务都将被删除，且不可恢复，确认删除？');
+  if (!ifConfirm) { return }
+  else {
+    var childrenFolders = childrenContainer.querySelectorAll('.task-items-box');
+    var childrenTasks = childrenContainer.querySelectorAll('.task-item');    
   
-  //删除子分类
-  if (childrenFolders) {
-    removeChildren(childrenFolders, 'folder', 'folderID');
+    //删除子分类
+    if (childrenFolders) {
+      var lenOfChildrenFolders = childrenFolders.length,
+        i;
+      for (i = 0; i < lenOfChildrenFolders; i++) {
+        var thisFolderID = parseInt(childrenFolders[i].getAttribute('data-folder-id'));
+        toDoStorage.removeItem('folder', 'folderID', thisFolderID);
+      }
+    }
+    //删除子任务
+    if (childrenTasks) {
+      var lenOfChildrenTasks = childrenTasks.length,
+        j;
+      for (i = 0; i < lenOfChildrenTasks; i++) {
+        var thisTaskID = parseInt(childrenFolders[i].getAttribute('data-folder-id'));
+        toDoStorage.removeItem('folder', 'folderID', thisTaskID);
+      }
+    }
+    //删除当前分类节点
+    toDoStorage.removeItem('folder', 'folderID', currentFolderID);
+    folderContainer.removeChild(removeFolderItem);
   }
-  //删除子任务
-  if (childrenTasks) {
-    removeChildren(childrenFolders, 'task', 'taskID');
-  }
-  toDoStorage.removeItem('folder', 'folderID', currentFolderID);
-  folderContainer.removeChild(removeFolderItem);
 }
  
  
