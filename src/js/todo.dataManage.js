@@ -57,7 +57,7 @@ toDoStorage.getItem = function (type, key, value) {
 toDoStorage.addItem = function (type, itemObj) {
 
   var itemListArray = this.getItemListArray(type);
-  itemListArray.push(itemObj)
+  itemListArray.push(itemObj);
   localStorage.setItem(type, JSON.stringify(itemListArray));
 
 };
@@ -65,7 +65,7 @@ toDoStorage.addItem = function (type, itemObj) {
 /*
   * 修改某一项某个属性的方法，因为value是一个数组对象，修改起来很不方便，需要封装成一个方法
   * 参数说明：
-  * type: folder 或者 task 
+  * type: folder 或者 task
   * idValue: folder 或者 task 的唯一标示符
   * options: 一个哈希列表
   { item: value } item是要修改的项，value是新的值
@@ -87,7 +87,7 @@ toDoStorage.setItem = function (type, idValue, options) {
       break;
     }
   }
-  localStorage.setItem(type, JSON.stringify(itemListArray))
+  localStorage.setItem(type, JSON.stringify(itemListArray));
 
 };
 
@@ -99,7 +99,7 @@ toDoStorage.setItem = function (type, idValue, options) {
   * value: 值
 */
 toDoStorage.removeItem = function (type, key, value) {
-  
+
   var itemListArray = this.getItemListArray(type);
   var len = itemListArray.length,
       i;
@@ -107,13 +107,9 @@ toDoStorage.removeItem = function (type, key, value) {
   for (i = 0; i < len; i++) {
     if (itemListArray[i][key] === value) {
       itemListArray.splice(i, 1);
-      break;      
+      break;
     }
   }
-  localStorage.setItem(type, JSON.stringify(itemListArray))
-  
+  localStorage.setItem(type, JSON.stringify(itemListArray));
+
 };
-
-
-
-
