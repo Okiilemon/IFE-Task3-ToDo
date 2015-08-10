@@ -1,12 +1,12 @@
 var todoDOM = (function () {
-  
-  //===================    Begin Category Module  ===================  
-  
+
+  //===================    Begin Category Module  ===================
+
   //----------   Begin Module Scope Variables  ------------
 
   //当前被选中的分类文件夹
-  var selected_folder; 
-        
+  var selected_folder;
+
   //----------   End Module Scope Variables  --------------
 
   //----------   Begin DOM Method  ------------------------
@@ -17,16 +17,16 @@ var todoDOM = (function () {
   var items = document.querySelectorAll('.item');
   var folder_name_boxes = document.querySelectorAll('.folder-name-box');
   var lenOfFolders, lenOfItems;
-  
-  /* 
-  * 添加新分类弹框上的元素 
+
+  /*
+  * 添加新分类弹框上的元素
   */
   var add_folder_form = document.querySelector('.todo-shell-category-add-form');
   // 输入新分类名称的输入框
   var new_folder_name_input = document.querySelector('#new-folder-title');
-  // 确认添加的按钮 
+  // 确认添加的按钮
   var submit_new_folder_btn = document.querySelector('#plus-btn');
-  //取消添加的按钮 
+  //取消添加的按钮
   var close_add_folder_form = document.querySelector('#close-form-btn');
   var selected_folder_box = add_folder_form.querySelector('#selected-folder');
 
@@ -116,7 +116,7 @@ var todoDOM = (function () {
     //当输入值为空时，隐藏掉右侧的‘添加’按钮
     submit_new_folder_btn.style.display = inputValue.length ? 'inline' : 'none';
   }, false);
-    
+
   /*
    * 用户添加一个新分类时执行的一系列动作
    * 因为在点击添加按钮和按下回车都有执行
@@ -133,7 +133,7 @@ var todoDOM = (function () {
     var parentFolderID = toBeAddedBox.getAttribute('data-folder-id');
 
     var newNodeLevel = parentNodeLevel + 1;
-      
+
     //渲染节点
     var new_folder = paintFolderNode(folderID, new_folder_name, toBeAddedBox, newNodeLevel);
     //将数据存入localStorage
@@ -149,7 +149,7 @@ var todoDOM = (function () {
     selected_folder = new_folder.firstElementChild;
     add_folder_form.style.display = 'none';
     new_folder_name_input.value = '';
-    
+
     //判断一下当前是否处于编辑任务状态,如果是将当前新添加的分类加到下拉列表中
     if (document.querySelector('.edit-form-head-area')) {
       var new_folder_option = document.createElement('option');
@@ -160,13 +160,13 @@ var todoDOM = (function () {
       select.value = new_folder_name;
 
     }
-  }
+  };
 
   new_folder_name_input.addEventListener('keydown', function (e) {
     if (e.keyCode === 13) {
       addNewFolder();
     }
-  }, false)
+  }, false);
 
   /*
   * 点击输入框上的“添加”按钮，添加新分类
@@ -181,16 +181,16 @@ var todoDOM = (function () {
   close_add_folder_form.addEventListener('click', function () {
     add_folder_form.style.display = 'none';
     new_folder_name_input.value = '';
-  }), false;
-    
-    
+  }, false);
+
+
   //-------------------   End Event Handlers  ----------------------
-  
-  //===================    End Category Module  ===================  
-   
-   
+
+  //===================    End Category Module  ===================
+
+
   //===================  Begin Task Module  ======================
-   
+
   //-------------------   Begin DOM Method  ------------------------
 
   var task_type_area = document.querySelector('.task-type-area');
@@ -201,10 +201,10 @@ var todoDOM = (function () {
   task_type_area.addEventListener('click', function (e) {
     var type = e.target.getAttribute('data-type');
     toggleTaskItemByType(type);
-  }, false)
+  }, false);
 
-  todo_task_lists_area.addEventListener('click', function (e) { 
-    
+  todo_task_lists_area.addEventListener('click', function (e) {
+
     //给删除任务按钮绑定事件
     // ------ 删除一个任务之后，三栏的视图都要相应地发生变化 --------
     if (/remove-task-btn/.test(e.target.className)) {
@@ -219,13 +219,13 @@ var todoDOM = (function () {
       var parentFolder = document.querySelector('[data-folder-id="' + parentFolderObj.parentFolderID + '"]');
       var taskItemInFolder = parentFolder.querySelector('[data-task-id="' + taskID + '"]');
       //任务数减一
-      changeTheNumOfTask(taskItemInFolder, -1)
+      changeTheNumOfTask(taskItemInFolder, -1);
       //删除任务节点
       parentFolder.removeChild(taskItemInFolder);
-      
+
       //删除任务的数据部分
       toDoStorage.removeItem('task', 'taskID', taskID);
-      
+
       //移除第二栏中的任务节点，需要判断一下该时间节点下有几个任务
       var parentTimeNode = removedTaskItem.parentElement;
       var numOfChildrenTasks = parentTimeNode.querySelectorAll('.task-item').length;
@@ -237,7 +237,7 @@ var todoDOM = (function () {
       else {
         parentTimeNode.removeChild(removedTaskItem);
       }
-      
+
       //判断一下第三栏是否正在展示当前删除的任务，如果是的话，展示其他任务
       if (document.querySelector('.display-head-area')) {
         var currentDisplayTaskID = parseInt(document.querySelector('.display-head-area').querySelector('.info-task-name').getAttribute('data-task-id'));
@@ -245,12 +245,10 @@ var todoDOM = (function () {
           paintInfoDisplayArea(toDoStorage.getItemListArray('task')[0]);
         }
       }
-    } 
-     
-    //给每一个task item 绑定click事件，点击之后在右侧显示相应的任务信息
-    else if (e.target.className === 'task-item' || e.target.parentElement.className === 'task-item') {
-      var taskID = parseInt(e.target.getAttribute('data-task-id'));
-      var task_obj = toDoStorage.getItem('task', 'taskID', taskID);
+    } else if (e.target.className === 'task-item' || e.target.parentElement.className === 'task-item') {
+      //给每一个task item 绑定click事件，点击之后在右侧显示相应的任务信息
+      var _taskID = parseInt(e.target.dataset('taskId'));
+      var task_obj = toDoStorage.getItem('task', 'taskID', _taskID);
       paintInfoDisplayArea(task_obj);
     }
 
@@ -258,7 +256,7 @@ var todoDOM = (function () {
 
   //给添加任务按钮绑定事件
   add_new_task_btn.addEventListener('click', function () {
-  
+
     //先判断当前是否处于编辑状态
     if (document.querySelector('.edit-form-head-area')) {
       var headArea = document.querySelector('.edit-form-head-area');
@@ -280,6 +278,6 @@ var todoDOM = (function () {
       paintInfoEditArea(false, task);
     }
 
-  }, false)
+  }, false);
 
 })();
